@@ -1,0 +1,16 @@
+
+
+spring:
+  application:
+    name: translate-helper
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: 5000
+            readTimeout: 120000
+#
+#          libretranslate-client: https://127.0.0.1:5000/translate
+
+

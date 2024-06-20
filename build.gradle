@@ -1,0 +1,67 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+	id 'org.springframework.boot' version '3.0.5'
+	id 'io.spring.dependency-management' version '1.1.0'
+	id 'org.jetbrains.kotlin.jvm' version '1.7.22'
+	id 'org.jetbrains.kotlin.plugin.spring' version '1.7.22'
+}
+
+group = 'com.peoplecloud'
+version = '0.0.1-SNAPSHOT'
+
+group = 'com.boomstream'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2022.0.1")
+}
+
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+	implementation 'org.jetbrains.kotlin:kotlin-reflect'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	implementation("org.springframework.boot:spring-boot-starter")
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	implementation("org.springframework.kafka:spring-kafka")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
+
+	// Apache PDFBox for extracting text and images
+	implementation("org.apache.pdfbox:pdfbox:2.0.24")
+
+	// iText for generating PDF
+	implementation("com.itextpdf:kernel:7.2.1")
+	implementation("com.itextpdf:layout:7.2.1")
+	implementation("com.itextpdf:io:7.2.1")
+	implementation 'com.itextpdf:itext7-core:7.2.1'
+	implementation "com.itextpdf:html2pdf:4.0.1"  // Для конвертации HTML в PDF
+	implementation "com.itextpdf:forms:7.2.1"    // Для работы с PDF формами
+
+	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+	kotlinOptions {
+		freeCompilerArgs = ['-Xjsr305=strict']
+		jvmTarget = '17'
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
