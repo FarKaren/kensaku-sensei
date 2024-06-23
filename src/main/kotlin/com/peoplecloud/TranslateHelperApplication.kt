@@ -11,4 +11,5 @@ class TranslateHelperApplication
 
 fun main(args: Array<String>) {
 	runApplication<TranslateHelperApplication>(*args)
+	nu.pattern.OpenCV.loadLocally()
 }

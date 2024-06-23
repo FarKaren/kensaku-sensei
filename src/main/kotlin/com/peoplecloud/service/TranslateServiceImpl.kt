@@ -34,7 +34,7 @@ class TranslateServiceImpl(
 
     // Инициализация Tesseract OCR
     private val tesseract = Tesseract().apply {
-        setDatapath("/usr/share/tesseract-ocr/4.00/tessdata") // Укажите путь к tessdata
+        setDatapath(tessDataPath) // Укажите путь к tessdata
         setVariable("tessedit_ocr_engine_mode", "3") // OCR Engine mode: 3 - Default, based on what is available
         setVariable("textord_heavy_nr", "1") // Enables automatic orientation correction
         setVariable("textord_straight_baselines", "1") // Assists in correct text detection
@@ -92,86 +92,90 @@ class TranslateServiceImpl(
 
         for (page in 0 until document.numberOfPages) {
             val bim = pdfRenderer.renderImageWithDPI(page, 300F, ImageType.RGB)
-            //val processedImage = preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-            val processedImage = processImageWithOpenCV(bim) // Обработка изображения с помощью OpenCV
+            val processedImage = preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
+            //val processedImage = processImageWithOpenCV(bim) // Обработка изображения с помощью OpenCV
             sb.append(extractTextFromImage(processedImage, "eng")).append("\n") // Используйте "eng" или другой язык по умолчанию
         }
 
         return sb.toString()
     }
 
-    private fun processImageWithOpenCV(image: BufferedImage): BufferedImage {
-        val mat = bufferedImageToMat(image)
-        val sobelX = Mat()
-        val sobelY = Mat()
-        val absSobelX = Mat()
-        val absSobelY = Mat()
+//    private fun processImageWithOpenCV(image: BufferedImage): BufferedImage {
+//        val mat = bufferedImageToMat(image)
+//
+//        // Преобразуем изображение в градации серого
+//        val gray = Mat()
+//        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
+//
+//        // Опционально: Применить размытие для снижения шума
+//        Imgproc.GaussianBlur(gray, gray, Size(3.0, 3.0), 0.0)
+//
+//        // Применяем Canny для выделения краев
+//        val edges = Mat()
+//        Imgproc.Canny(gray, edges, 50.0, 150.0)
+//
+//        // Применяем HoughLinesP для поиска прямых
+//        val lines = Mat()
+//        Imgproc.HoughLinesP(edges, lines, 1.0, Math.PI / 180, 50, 50.0, 10.0)
+//
+//        var angle = 0.0
+//        for (i in 0 until lines.rows()) {
+//            val l = lines.get(i, 0)
+//            val x1 = l[0]
+//            val y1 = l[1]
+//            val x2 = l[2]
+//            val y2 = l[3]
+//            angle += Math.atan2((y2 - y1), (x2 - x1))
+//        }
+//
+//        if (lines.rows() > 0) {
+//            angle /= lines.rows()
+//            angle = Math.toDegrees(angle)
+//        } else {
+//            angle = 0.0 // Если нет линий, угол составляет 0
+//        }
+//
+//        val rotationMatrix = Imgproc.getRotationMatrix2D(Point((mat.width() / 2).toDouble(), (mat.height() / 2).toDouble()), angle, 1.0)
+//        val rotatedMat = Mat()
+//        Imgproc.warpAffine(mat, rotatedMat, rotationMatrix, mat.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT, Scalar(255.0, 255.0, 255.0))
+//
+//        return matToBufferedImage(rotatedMat)
+//    }
 
-        Imgproc.Sobel(mat, sobelX, CvType.CV_16S, 1, 0)
-        Imgproc.Sobel(mat, sobelY, CvType.CV_16S, 0, 1)
-        Imgproc.convertScaleAbs(sobelX, absSobelX)
-        Imgproc.convertScaleAbs(sobelY, absSobelY)
-
-        val edges = Mat()
-        Core.addWeighted(absSobelX, 0.5, absSobelY, 0.5, 0.0, edges)
-
-        val lines = Mat()
-        Imgproc.HoughLinesP(edges, lines, 1.0, Math.PI / 180, 50, 50.0, 10.0)
-
-        var angle = 0.0
-        for (i in 0 until lines.rows()) {
-            val l = lines.get(i, 0)
-            val x1 = l[0]
-            val y1 = l[1]
-            val x2 = l[2]
-            val y2 = l[3]
-            angle += Math.atan2((y2 - y1), (x2 - x1))
-        }
-
-        angle /= lines.rows()
-        angle = Math.toDegrees(angle)
-
-        val rotationMatrix = Imgproc.getRotationMatrix2D(Point((mat.width() / 2).toDouble(), (mat.height() / 2).toDouble()), angle, 1.0)
-        val rotatedMat = Mat()
-        Imgproc.warpAffine(mat, rotatedMat, rotationMatrix, mat.size(), Imgproc.INTER_LINEAR, Core.BORDER_CONSTANT, Scalar(255.0, 255.0, 255.0))
-
-        return matToBufferedImage(rotatedMat)
-    }
-
-    private fun bufferedImageToMat(image: BufferedImage): Mat {
-        val mat = Mat(image.height, image.width, CvType.CV_8UC3)
-        val data = ByteArray(image.width * image.height * 3)
-        val intArray = image.getRGB(0, 0, image.width, image.height, null, 0, image.width)
-        for (i in intArray.indices) {
-            val rgb = intArray[i]
-            data[i * 3] = (rgb and 0xFF).toByte()
-            data[i * 3 + 1] = (rgb shr 8 and 0xFF).toByte()
-            data[i * 3 + 2] = (rgb shr 16 and 0xFF).toByte()
-        }
-        mat.put(0, 0, data)
-        return mat
-    }
-
-    private fun matToBufferedImage(mat: Mat): BufferedImage {
-        val data = ByteArray(mat.width() * mat.height() * mat.elemSize().toInt())
-        mat.get(0, 0, data)
-        val bufferedImage = BufferedImage(mat.width(), mat.height(), BufferedImage.TYPE_3BYTE_BGR)
-        bufferedImage.raster.setDataElements(0, 0, mat.width(), mat.height(), data)
-        return bufferedImage
-    }
-
-    private fun scaleImage(image: BufferedImage, scale: Double): BufferedImage {
-        val width = (image.width * scale).toInt()
-        val height = (image.height * scale).toInt()
-        val scaledImage = BufferedImage(width, height, image.type)
-
-        val g2d = scaledImage.createGraphics()
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
-        g2d.drawImage(image, 0, 0, width, height, null)
-        g2d.dispose()
-
-        return scaledImage
-    }
+//    private fun bufferedImageToMat(image: BufferedImage): Mat {
+//        val mat = Mat(image.height, image.width, CvType.CV_8UC3)
+//        val data = ByteArray(image.width * image.height * 3)
+//        val intArray = image.getRGB(0, 0, image.width, image.height, null, 0, image.width)
+//        for (i in intArray.indices) {
+//            val rgb = intArray[i]
+//            data[i * 3] = (rgb and 0xFF).toByte()
+//            data[i * 3 + 1] = (rgb shr 8 and 0xFF).toByte()
+//            data[i * 3 + 2] = (rgb shr 16 and 0xFF).toByte()
+//        }
+//        mat.put(0, 0, data)
+//        return mat
+//    }
+//
+//    private fun matToBufferedImage(mat: Mat): BufferedImage {
+//        val data = ByteArray(mat.width() * mat.height() * mat.elemSize().toInt())
+//        mat.get(0, 0, data)
+//        val bufferedImage = BufferedImage(mat.width(), mat.height(), BufferedImage.TYPE_3BYTE_BGR)
+//        bufferedImage.raster.setDataElements(0, 0, mat.width(), mat.height(), data)
+//        return bufferedImage
+//    }
+//
+//    private fun scaleImage(image: BufferedImage, scale: Double): BufferedImage {
+//        val width = (image.width * scale).toInt()
+//        val height = (image.height * scale).toInt()
+//        val scaledImage = BufferedImage(width, height, image.type)
+//
+//        val g2d = scaledImage.createGraphics()
+//        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR)
+//        g2d.drawImage(image, 0, 0, width, height, null)
+//        g2d.dispose()
+//
+//        return scaledImage
+//    }
 
     private fun convertToGrayscale(image: BufferedImage): BufferedImage {
         val grayImage = BufferedImage(image.width, image.height, BufferedImage.TYPE_BYTE_GRAY)
@@ -182,18 +186,10 @@ class TranslateServiceImpl(
     }
 
     private fun preprocessImage(image: BufferedImage): BufferedImage {
-        val flippedImage = flipImageHorizontally(image) // Переворачиваем изображение по горизонтал
-        val scaledImage = scaleImage(flippedImage, 1.5) // Увеличиваем масштаб изображения
-        val grayImage = convertToGrayscale(scaledImage) // Преобразование в оттенки серого
+//        val scaledImage = scaleImage(flippedImage, 1.5) // Увеличиваем масштаб изображения
+        val grayImage = convertToGrayscale(image) // Преобразование в оттенки серого
         return enhanceImage(grayImage) // Улучшаем изображение
     }
-    private fun flipImageHorizontally(image: BufferedImage): BufferedImage {
-        val tx = AffineTransform.getScaleInstance(-1.0, 1.0)
-        tx.translate(-image.width.toDouble(), 0.0)
-        val op = AffineTransformOp(tx, AffineTransformOp.TYPE_NEAREST_NEIGHBOR)
-        return op.filter(image, null)
-    }
-
 
     private fun enhanceImage(image: BufferedImage): BufferedImage {
         // Применяем фильтр для повышения контрастности и резкости
@@ -206,7 +202,9 @@ class TranslateServiceImpl(
         file.transferTo(tempFile)
 
         val image = ImageIO.read(tempFile)
-        val text =  extractTextFromImage(image, "eng")
+        val processedImage = preprocessImage(image)
+        //val processedImage = processImageWithOpenCV(image)
+        val text =  extractTextFromImage(processedImage, "eng")
         val translatedText = translateText(text, srcLang, tgtLang)
         analyzeText(translatedText, srcLang, tgtLang)
         return ""

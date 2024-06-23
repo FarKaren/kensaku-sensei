@@ -36,7 +36,7 @@ dependencies {
 
 	//Image handlers
 	implementation("net.sourceforge.tess4j:tess4j:5.11.0") //Tesseract
-	implementation("org.openpnp:opencv:4.5.4-2")		   //OpenCV
+	implementation("org.openpnp:opencv:4.9.0-0")		   //OpenCV
 
 	// Apache PDFBox for extracting text and images
 	implementation("org.apache.pdfbox:pdfbox:2.0.24")
