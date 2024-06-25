@@ -1,41 +1,40 @@
 package com.peoplecloud.controller
 
 
-import com.itextpdf.kernel.pdf.PdfDocument
-import com.itextpdf.kernel.pdf.PdfReader
-import com.peoplecloud.dto.PdfDoc
-import com.peoplecloud.dto.TranslateRq
-import com.peoplecloud.dto.TranslateRs
-import com.peoplecloud.service.TranslateService
+import com.peoplecloud.dto.FileDataDto
+import com.peoplecloud.dto.ProcessFileRq
+import com.peoplecloud.dto.ProcessFileRs
+import com.peoplecloud.service.processor.FileProcessorService
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
-import java.io.*
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 
 
 @RestController
 @RequestMapping("/api/v1")
-class AnalyzerController(
-    private val translateService: TranslateService
+class FileProcessorController(
+    private val fileProcessorService: FileProcessorService
 ) {
 
     companion object {
-        val log: Logger = LoggerFactory.getLogger(AnalyzerController::class.java)
+        val log: Logger = LoggerFactory.getLogger(FileProcessorController::class.java)
     }
 
     @PostMapping("/analyzer")
-    fun translatePdf(@ModelAttribute request: TranslateRq): String {
-        val results = mutableListOf<String>()
+    fun translatePdf(@ModelAttribute request: ProcessFileRq): ResponseEntity<ProcessFileRs> {
+        val results = mutableListOf<FileDataDto>()
 
         for (file in request.multipartFiles) {
             if (file.isEmpty) continue
-            val text = translateService.translateAndProcessPdf(file, request.srcLang, request.tgtLang)
-            results.add(text)
+            val pictureData = fileProcessorService.processFile(file, request.srcLang, request.tgtLang)
+            results.add(FileDataDto(pictureData))
         }
 
-        return results.joinToString("\n")
+        return ResponseEntity.ok(ProcessFileRs(results))
 
     }
 
@@ -45,7 +44,7 @@ class AnalyzerController(
 
 
 //    @PostMapping("/analyze")
-//    fun analyzeText(@RequestBody text: TranslateRq): ResponseEntity<String> {
+//    fun analyzeText(@RequestBody text: ProcessFileRq): ResponseEntity<String> {
 //        val scriptWrapperPath = "C:\\Users\\Karen\\PythonTranslate\\run_translate.bat"
 //        val scriptDirPath = "C:\\Users\\Karen\\PythonTranslate\\translate_nlp.py"
 //        val outputFilePath = "C:\\Users\\Karen\\PythonTranslate\\translated_text.txt"
@@ -111,7 +110,7 @@ class AnalyzerController(
 //}
 
 //    @PostMapping("/analyzer")
-//    fun translatePdf(@ModelAttribute request: TranslateRq): ResponseEntity<TranslateRs> {
+//    fun translatePdf(@ModelAttribute request: ProcessFileRq): ResponseEntity<TranslateRs> {
 //        if(request.multipartFiles.size > 5)
 //            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)
 //
@@ -145,7 +144,7 @@ class AnalyzerController(
 
 
 //    @PostMapping("/translate")
-//    fun translate(@RequestBody request: TranslateRq): ResponseEntity<TranslateRs> {
+//    fun translate(@RequestBody request: ProcessFileRq): ResponseEntity<TranslateRs> {
 //        // Укажем полный путь к скрипту Python
 //        val scriptWrapperPath = "C:\\Users\\Karen\\PythonTranslate\\run_translate.bat"
 //        val scriptDirPath = "C:\\Users\\Karen\\PythonTranslate\\translate.py"

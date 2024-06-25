@@ -1,7 +1,7 @@
 //package com.peoplecloud.service
 //
 //import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-//import com.peoplecloud.dto.TranslateRq
+//import com.peoplecloud.dto.ProcessFileRq
 //import kotlinx.coroutines.runBlocking
 //import org.springframework.kafka.annotation.KafkaListener
 //import org.springframework.kafka.core.KafkaTemplate
@@ -15,7 +15,7 @@
 //
 //    @KafkaListener(topics = ["translation_requests"], groupId = "translation_group")
 //    fun consumeMessage(message: String, acknowledgment: Acknowledgment) {
-//        val request: TranslateRq  = jacksonObjectMapper().readValue(message)
+//        val request: ProcessFileRq  = jacksonObjectMapper().readValue(message)
 //        runBlocking {
 //            val result = processTranslationRequest(request)
 //            sendTranslationResult(result)

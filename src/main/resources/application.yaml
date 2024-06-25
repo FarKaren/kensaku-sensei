@@ -1,4 +1,5 @@
-
+server:
+  port: 8080
 
 spring:
   application:
@@ -10,7 +11,14 @@ spring:
           default:
             connectTimeout: 5000
             readTimeout: 120000
-#
-#          libretranslate-client: https://127.0.0.1:5000/translate
+          libretranslate-client:
+            connectTimeout: 5000
+            readTimeout: 120000
+feign:
+  client:
+    libretranslate-client:
+      url: http://127.0.0.1:5000
+
+pictureSearchUrl: "https://duckduckgo.com/?q=$query&iar=images&iax=images&ia=images"
 
 

@@ -1,7 +1,7 @@
 //package com.peoplecloud.service
 //
 //import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-//import com.peoplecloud.dto.TranslateRq
+//import com.peoplecloud.dto.ProcessFileRq
 //import org.springframework.kafka.core.KafkaTemplate
 //import org.springframework.stereotype.Service
 //
@@ -14,7 +14,7 @@
 //        private const val TRANSLATION_TOPIC = "translation_requests"
 //    }
 //
-//    fun sendTranslationRequest(request: TranslateRq) {
+//    fun sendTranslationRequest(request: ProcessFileRq) {
 //        val message = jacksonObjectMapper().writeValueAsString(request)
 //        kafkaTemplate.send(TRANSLATION_TOPIC, message)
 //    }
