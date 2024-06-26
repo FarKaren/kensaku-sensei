@@ -13,14 +13,18 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.rendering.ImageType
 import org.apache.pdfbox.rendering.PDFRenderer
 import org.apache.pdfbox.text.PDFTextStripper
+import org.apache.poi.xwpf.usermodel.XWPFDocument
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.image.RescaleOp
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import javax.imageio.ImageIO
 
 @Service
@@ -53,35 +57,53 @@ class FileProcessorServiceImpl(
         setVariable("textord_straight_baselines", "1") // Assists in correct text detection
     }
 
-//    override fun translateAndProcessPdf(pdfDocument: PdfDocument, srcLang: String, tgtLang: String): List<String> {
-//        val translations: StringBuilder = StringBuilder()
-//
-//        val parser = PdfDocumentContentParser(pdfDocument)
-//        val strategy: ITextExtractionStrategy = SimpleTextExtractionStrategy()
-//
-//        for (pageNumber in 1..pdfDocument.numberOfPages) {
-//            val pageText = parser.processContent(pageNumber, strategy).resultantText
-//            val translation = translateText(pageText, srcLang, tgtLang)
-//            translations.append(translation)
-//        }
-//        return this.analyzeText(translations, srcLang, tgtLang)
-//    }
 
     override fun processFile(file: MultipartFile, srcLang: String, tgtLang: String): List<PicDataDto> {
         this.validateLanguage(srcLang, tgtLang)
-        return when (getExtension(file.originalFilename)) {
-            "pdf" -> processPdf(file, srcLang, tgtLang)
-            "jpeg", "jpg", "png" -> processImage(file, srcLang, tgtLang)
-            else -> throw UnsupportedFileType("Unsupported file type: ${file.originalFilename}")
-        }
-
+        val processedText =
+            when (getExtension(file.originalFilename)) {
+                "txt" -> processTxt(file)
+                "docx", "doc" -> processDoc(file)
+                "pdf" -> processPdf(file, srcLang)
+                "jpeg", "jpg", "png" -> processImage(file, srcLang)
+                else -> throw UnsupportedFileType("Unsupported file type: ${file.originalFilename}")
+            }
+        return handleText(processedText, srcLang, tgtLang)
     }
 
     private fun getExtension(filename: String?): String? {
         return filename?.substringAfterLast('.', "")
     }
 
-    private fun processPdf(file: MultipartFile, srcLang: String, tgtLang: String): List<PicDataDto> {
+    private fun processTxt(file: MultipartFile): String {
+        val inputStream = file.inputStream
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        val stringBuilder = StringBuilder()
+        var line: String?
+
+        while (reader.readLine().also { line = it } != null) {
+            stringBuilder.append(line).append(System.lineSeparator())
+        }
+
+        reader.close()
+        return stringBuilder.toString()
+    }
+
+    private fun processDoc(file: MultipartFile): String {
+        val inputStream = file.inputStream
+
+        val document = XWPFDocument(inputStream)
+        val stringBuilder = StringBuilder()
+
+        for (paragraph in document.paragraphs) {
+            stringBuilder.append(paragraph.text).append(System.lineSeparator())
+        }
+
+        document.close()
+        return stringBuilder.toString()
+    }
+
+    private fun processPdf(file: MultipartFile, srcLang: String): String {
         val tempFile: Path = Files.createTempFile(Paths.get(System.getProperty("java.io.tmpdir")), "uploaded-", ".pdf")
         file.transferTo(tempFile.toFile())
 
@@ -89,31 +111,31 @@ class FileProcessorServiceImpl(
             val stripper = PDFTextStripper()
             val text = stripper.getText(document).trim()
 
-            val result =
-                text.ifEmpty {
+            return text.ifEmpty {
                     // PDF содержит изображения, распознаем текст с помощью OCR
                     readImagesFromPdf(document, srcLang)
                 }
-            val translatedText = translateText(result, srcLang, "en")
-            val analyzedText = analyzerService.analyzeText(translatedText)
-            val translateToTgtLang = translateText(analyzedText, "en", tgtLang)
-            val resultWords = translateToTgtLang.split(",").toSet()
-            return pictureFinder.findPictureByWords(resultWords)
+//            val translatedText = translateText(result, srcLang, "English")
+//            val analyzedText = analyzerService.analyzeText(translatedText)
+//            val translateToTgtLang = translateText(analyzedText, "English", tgtLang)
+//            val resultWords = translateToTgtLang.split(",").toSet()
+//            return pictureFinder.findPictureByWords(resultWords)
         }
     }
 
-    private fun processImage(file: MultipartFile, srcLang: String, tgtLang: String): List<PicDataDto> {
+    private fun processImage(file: MultipartFile, srcLang: String): String {
         val tempFile = Files.createTempFile(null, ".tmp").toFile()
         file.transferTo(tempFile)
 
         val image = ImageIO.read(tempFile)
-        val processedImage = preprocessImage(image) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-        val text = extractTextFromImage(processedImage, srcLang)
-        val translatedText = translateText(text, srcLang, "en")
-        val analyzedText = analyzerService.analyzeText(translatedText)
-        val translateToTgtLang = translateText(analyzedText, "en", tgtLang)
-        val resultWords = translateToTgtLang.split(",").toSet()
-        return pictureFinder.findPictureByWords(resultWords)
+        val processedImage =
+            preprocessImage(image) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
+        return extractTextFromImage(processedImage, srcLang)
+//        val translatedText = translateText(text, srcLang, "English")
+//        val analyzedText = analyzerService.analyzeText(translatedText)
+//        val translateToTgtLang = translateText(analyzedText, "English", tgtLang)
+//        val resultWords = translateToTgtLang.split(",").toSet()
+//        return pictureFinder.findPictureByWords(resultWords)
     }
 
 
@@ -123,8 +145,10 @@ class FileProcessorServiceImpl(
 
         for (page in 0 until document.numberOfPages) {
             val bim = pdfRenderer.renderImageWithDPI(page, 300F, ImageType.RGB)
-            val processedImage = preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-            sb.append(extractTextFromImage(processedImage, srcLang)).append("\n") // Используйте "eng" или другой язык по умолчанию
+            val processedImage =
+                preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
+            sb.append(extractTextFromImage(processedImage, srcLang))
+                .append("\n") // Используйте "eng" или другой язык по умолчанию
         }
 
         return sb.toString()
@@ -183,41 +207,29 @@ class FileProcessorServiceImpl(
         val translationRequest = LibretranslateRq(
             q = text,
             source = libretranslateLangCode[srcLang]!!,
-            target = libretranslateLangCode[tgtLang]!!      )
+            target = libretranslateLangCode[tgtLang]!!
+        )
         val translationResponse = translateClient.translate(translationRequest)
         return translationResponse.translatedText
     }
 
     private fun validateLanguage(srcLang: String, tgtLang: String) {
-        if(!tesseractLangCode.keys.contains(srcLang) ||
-            !libretranslateLangCode.keys.contains(srcLang))
+        if (!tesseractLangCode.keys.contains(srcLang) ||
+            !libretranslateLangCode.keys.contains(srcLang)
+        )
             throw UnsupportedLanguageException(srcLang)
 
-        if(!tesseractLangCode.keys.contains(tgtLang) ||
-            !libretranslateLangCode.keys.contains(tgtLang))
+        if (!tesseractLangCode.keys.contains(tgtLang) ||
+            !libretranslateLangCode.keys.contains(tgtLang)
+        )
             throw UnsupportedLanguageException(tgtLang)
     }
 
-
-
-//    override fun processAndTranslatePdf(pdfDocument: PdfDocument, srcLang: String, tgtLang: String): List<PageTranslation> {
-//        val translations = mutableListOf<PageTranslation>()
-//
-//        val parser = PdfDocumentContentParser(pdfDocument)
-//        val strategy: ITextExtractionStrategy = SimpleTextExtractionStrategy()
-//
-//        for (pageNumber in 1..pdfDocument.numberOfPages) {
-//            val pageText = parser.processContent(pageNumber, strategy).resultantText
-//            val translation = translateText(pageText, srcLang, tgtLang)
-//            translations.add(PageTranslation(pageNumber, translation))
-//        }
-//
-//        return translations
-//    }
-//
-//    private fun translateText(text: String, srcLang: String, tgtLang: String): String {
-//        val translationRequest = LibretranslateRq(q = text, source = srcLang, target = tgtLang)
-//        val translationResponse = translateClient.translate(translationRequest)
-//        return translationResponse.translatedText
-//    }
+    private fun handleText(text: String, srcLang: String, tgtLang: String): List<PicDataDto> {
+        val translatedText = translateText(text, srcLang, "English")
+        val analyzedText = analyzerService.analyzeText(translatedText)
+        val translateToTgtLang = translateText(analyzedText, "English", tgtLang)
+        val resultWords = translateToTgtLang.split(",").toSet()
+        return pictureFinder.findPictureByWords(resultWords)
+    }
 }
