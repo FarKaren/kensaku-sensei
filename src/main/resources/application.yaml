@@ -19,6 +19,6 @@ feign:
     libretranslate-client:
       url: http://127.0.0.1:5000
 
-pictureSearchUrl: "https://duckduckgo.com/?q=$query&iar=images&iax=images&ia=images"
+pictureSearchUrl: "https://duckduckgo.com/?q=$query&iar=images&iax=images&ia=images&p=1"
 
 

@@ -1,6 +1,7 @@
 package com.peoplecloud.controller
 
 import com.peoplecloud.dto.exception.ErrorDto
+import com.peoplecloud.dto.exception.UnsupportedLanguageException
 import com.peoplecloud.dto.exception.ValidationErrorResponse
 import com.peoplecloud.dto.exception.Violation
 import com.peoplecloud.exceptions.UnsupportedFileType
@@ -28,6 +29,18 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
     @ExceptionHandler(UnsupportedFileType::class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     fun unsupportedFileTypeException(e: UnsupportedFileType): ResponseEntity<ErrorDto> {
+        log.error(e.message)
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = HttpStatus.BAD_REQUEST,
+                errorMessage = e.message!!
+            )
+        )
+    }
+
+    @ExceptionHandler(UnsupportedLanguageException::class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    fun unsupportedLanguageException(e: UnsupportedLanguageException): ResponseEntity<ErrorDto> {
         log.error(e.message)
         return ResponseEntity.ok(
             ErrorDto(

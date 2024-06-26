@@ -3,6 +3,7 @@ package com.peoplecloud.service.processor
 import com.peoplecloud.client.LibretranslateClient
 import com.peoplecloud.client.LibretranslateRq
 import com.peoplecloud.dto.PicDataDto
+import com.peoplecloud.dto.exception.UnsupportedLanguageException
 import com.peoplecloud.exceptions.UnsupportedFileType
 import com.peoplecloud.service.analyzer.AnalyzerService
 import com.peoplecloud.service.findare.PictureFinder
@@ -31,6 +32,18 @@ class FileProcessorServiceImpl(
 
     // Путь к каталогу tessdata
     private val tessDataPath = "/usr/share/tesseract-ocr/4.00/tessdata/"
+    private val tesseractLangCode = mapOf(
+        "Japanese" to "jpn",
+        "English" to "eng",
+        "Portuguese" to "prt",
+        "Russian" to "rus"
+    )
+    private val libretranslateLangCode = mapOf(
+        "Japanese" to "ja",
+        "English" to "en",
+        "Portuguese" to "pt",
+        "Russian" to "ru"
+    )
 
     // Инициализация Tesseract OCR
     private val tesseract = Tesseract().apply {
@@ -55,6 +68,7 @@ class FileProcessorServiceImpl(
 //    }
 
     override fun processFile(file: MultipartFile, srcLang: String, tgtLang: String): List<PicDataDto> {
+        this.validateLanguage(srcLang, tgtLang)
         return when (getExtension(file.originalFilename)) {
             "pdf" -> processPdf(file, srcLang, tgtLang)
             "jpeg", "jpg", "png" -> processImage(file, srcLang, tgtLang)
@@ -78,7 +92,7 @@ class FileProcessorServiceImpl(
             val result =
                 text.ifEmpty {
                     // PDF содержит изображения, распознаем текст с помощью OCR
-                    readImagesFromPdf(document)
+                    readImagesFromPdf(document, srcLang)
                 }
             val translatedText = translateText(result, srcLang, "en")
             val analyzedText = analyzerService.analyzeText(translatedText)
@@ -94,8 +108,8 @@ class FileProcessorServiceImpl(
 
         val image = ImageIO.read(tempFile)
         val processedImage = preprocessImage(image) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-        val text = extractTextFromImage(processedImage)
-        val translatedText = translateText(text, srcLang, tgtLang)
+        val text = extractTextFromImage(processedImage, srcLang)
+        val translatedText = translateText(text, srcLang, "en")
         val analyzedText = analyzerService.analyzeText(translatedText)
         val translateToTgtLang = translateText(analyzedText, "en", tgtLang)
         val resultWords = translateToTgtLang.split(",").toSet()
@@ -103,14 +117,14 @@ class FileProcessorServiceImpl(
     }
 
 
-    private fun readImagesFromPdf(document: PDDocument): String {
+    private fun readImagesFromPdf(document: PDDocument, srcLang: String): String {
         val pdfRenderer = PDFRenderer(document)
         val sb = StringBuilder()
 
         for (page in 0 until document.numberOfPages) {
             val bim = pdfRenderer.renderImageWithDPI(page, 300F, ImageType.RGB)
             val processedImage = preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-            sb.append(extractTextFromImage(processedImage)).append("\n") // Используйте "eng" или другой язык по умолчанию
+            sb.append(extractTextFromImage(processedImage, srcLang)).append("\n") // Используйте "eng" или другой язык по умолчанию
         }
 
         return sb.toString()
@@ -150,8 +164,9 @@ class FileProcessorServiceImpl(
         return rescaleOp.filter(image, null)
     }
 
-    private fun extractTextFromImage(image: BufferedImage): String {
-        tesseract.setLanguage("eng")
+    private fun extractTextFromImage(image: BufferedImage, lang: String): String {
+        val code = tesseractLangCode[lang]!!
+        tesseract.setLanguage(code)
         tesseract.setVariable("user_defined_dpi", "300")
         tesseract.setVariable("tessedit_char_blacklist", "_,.;:[]{}\"'\\/()|^%$@!?~`=<>")
         tesseract.setVariable("preserve_interword_spaces", "1")
@@ -165,9 +180,22 @@ class FileProcessorServiceImpl(
     }
 
     private fun translateText(text: String, srcLang: String, tgtLang: String): String {
-        val translationRequest = LibretranslateRq(q = text, source = srcLang, target = tgtLang)
+        val translationRequest = LibretranslateRq(
+            q = text,
+            source = libretranslateLangCode[srcLang]!!,
+            target = libretranslateLangCode[tgtLang]!!      )
         val translationResponse = translateClient.translate(translationRequest)
         return translationResponse.translatedText
+    }
+
+    private fun validateLanguage(srcLang: String, tgtLang: String) {
+        if(!tesseractLangCode.keys.contains(srcLang) ||
+            !libretranslateLangCode.keys.contains(srcLang))
+            throw UnsupportedLanguageException(srcLang)
+
+        if(!tesseractLangCode.keys.contains(tgtLang) ||
+            !libretranslateLangCode.keys.contains(tgtLang))
+            throw UnsupportedLanguageException(tgtLang)
     }
 
 

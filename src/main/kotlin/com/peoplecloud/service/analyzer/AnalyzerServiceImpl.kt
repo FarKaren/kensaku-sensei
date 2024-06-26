@@ -7,7 +7,7 @@ import java.nio.file.Paths
 import java.util.concurrent.Executors
 
 @Service
-class AnalyzerServiceImpl: AnalyzerService {
+class AnalyzerServiceImpl : AnalyzerService {
 
     companion object {
         private const val SCRIPT_DIR_PATH = "python/analyze_text_nlp.py"
@@ -77,10 +77,10 @@ class AnalyzerServiceImpl: AnalyzerService {
     private fun parseTxtFile(text: String): String {
         val preparedText = text.replace("\n", "")
         val scientificWords = preparedText.substringAfter("Scientific Words").substringBefore("Rare Words:")
-            .split(",").toList()
+            .lowercase().split(",").toList()
         val rareWords = preparedText.substringAfter("Rare Words:").substringBefore("Phrases:")
-            .split(",").toList()
-        val phrases = preparedText.substringAfter("Phrases:")
+            .lowercase().split(",").toList()
+        val phrases = preparedText.substringAfter("Phrases:").lowercase()
 
         val resultSet = HashSet<String>()
 
@@ -88,7 +88,8 @@ class AnalyzerServiceImpl: AnalyzerService {
             if (!phrases.contains(it))
                 resultSet.add(it)
         }
-        phrases.split(",").toList().forEach { resultSet.add(it) }
+        val listOfPhrase = phrases.split(",").toSet()
+        filterPhrase(listOfPhrase).forEach { resultSet.add(it) }
         return filterWords(resultSet).joinToString(",")
     }
 
@@ -101,5 +102,15 @@ class AnalyzerServiceImpl: AnalyzerService {
             }.filter { it.length >= 3 }
                 .joinToString(" ")
         }.filter { it.isNotEmpty() }.toSet()
+    }
+
+    fun filterPhrase(phrases: Set<String>): Set<String> {
+        return phrases.map { phrase ->
+            phrase.replace("-", " ")
+                .split(" ").map { word ->
+                    word.trim().replace("""[^a-zA-Zа-яА-Я]""".toRegex(), "")
+                }.filter { it.length >= 3 }
+                .joinToString(" ")
+        }.filter { it.isNotEmpty() && it.contains(" ") }.toSet()
     }
 }
