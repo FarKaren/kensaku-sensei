@@ -5,5 +5,5 @@ import org.springframework.web.multipart.MultipartFile
 
 interface FileProcessorService {
 
-    fun processFile(file: MultipartFile, srcLang: String, tgtLang: String): List<PicDataDto>
+    fun processFile(file: MultipartFile, tgtLang: String): List<PicDataDto>
 }

@@ -5,8 +5,6 @@ import com.peoplecloud.dto.FileDataDto
 import com.peoplecloud.dto.ProcessFileRq
 import com.peoplecloud.dto.ProcessFileRs
 import com.peoplecloud.service.processor.FileProcessorService
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
@@ -20,17 +18,13 @@ class FileProcessorController(
     private val fileProcessorService: FileProcessorService
 ) {
 
-    companion object {
-        val log: Logger = LoggerFactory.getLogger(FileProcessorController::class.java)
-    }
-
     @PostMapping("/analyzer")
     fun translatePdf(@ModelAttribute request: ProcessFileRq): ResponseEntity<ProcessFileRs> {
         val results = mutableListOf<FileDataDto>()
 
         for (file in request.multipartFiles) {
             if (file.isEmpty) continue
-            val pictureData = fileProcessorService.processFile(file, request.srcLang, request.tgtLang)
+            val pictureData = fileProcessorService.processFile(file, request.tgtLang)
             results.add(FileDataDto(pictureData))
         }
 

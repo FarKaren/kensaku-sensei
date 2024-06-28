@@ -14,6 +14,13 @@ spring:
           libretranslate-client:
             connectTimeout: 5000
             readTimeout: 120000
+  servlet:
+    multipart:
+      max-file-size: 10MB  # Максимальный размер одного загружаемого файла
+      max-request-size: 15MB  # Максимальный общий размер загрузки (всех файлов в одном запросе)
+      file-size-threshold: 2KB  # Размер файла, после которого он должен быть записан на диск
+
+
 feign:
   client:
     libretranslate-client:

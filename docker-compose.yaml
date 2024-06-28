@@ -3,10 +3,10 @@ version: "3"
 services:
   libretranslate:
     container_name: libretranslate
-    image: libretranslate/libretranslate:v1.5.5
+    image: libretranslate/libretranslate
     restart: unless-stopped
     ports:
       - "5000:5000"
     environment:
       - LT_API_UPDATE_MODELS=true
-      - LT_LOAD_ONLY=en,ru,pt,ja
+

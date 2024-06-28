@@ -1,23 +1,30 @@
 package com.peoplecloud.service.analyzer
 
+import com.peoplecloud.service.processor.FileProcessorServiceImpl
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.Executors
+import java.util.stream.Collectors
 
 @Service
 class AnalyzerServiceImpl : AnalyzerService {
 
     companion object {
+        val log: Logger = LoggerFactory.getLogger(FileProcessorServiceImpl::class.java)
         private const val SCRIPT_DIR_PATH = "python/analyze_text_nlp.py"
         private const val OUTPUT_FILE_PATH = "temp/analyzed_text.txt"
     }
 
     override fun analyzeText(text: String): String {
+        log.info("method analyzeText() invoked")
+        val projectPath = Paths.get("").toAbsolutePath().toString()
         try {
             val processBuilder =
-                ProcessBuilder("python3", SCRIPT_DIR_PATH, text, "en")
+                ProcessBuilder("$projectPath/myenv/bin/python3", SCRIPT_DIR_PATH, text, "en")
             val process = processBuilder.start()
 
             val executorService = Executors.newFixedThreadPool(2)
@@ -62,6 +69,7 @@ class AnalyzerServiceImpl : AnalyzerService {
     }
 
     private fun readStream(stream: InputStream, logPrefix: String): String {
+        log.info("method readStream() invoked")
         val output = StringBuilder()
         BufferedReader(InputStreamReader(stream, "UTF-8")).use { reader ->
             var line: String? = reader.readLine()
@@ -75,22 +83,27 @@ class AnalyzerServiceImpl : AnalyzerService {
     }
 
     private fun parseTxtFile(text: String): String {
+        log.info("method parseTxtFile() invoked")
         val preparedText = text.replace("\n", "")
-        val scientificWords = preparedText.substringAfter("Scientific Words").substringBefore("Rare Words:")
-            .lowercase().split(",").toList()
         val rareWords = preparedText.substringAfter("Rare Words:").substringBefore("Phrases:")
             .lowercase().split(",").toList()
         val phrases = preparedText.substringAfter("Phrases:").lowercase()
 
         val resultSet = HashSet<String>()
 
-        (scientificWords + rareWords).forEach {
+        rareWords.forEach {
             if (!phrases.contains(it))
                 resultSet.add(it)
         }
-        val listOfPhrase = phrases.split(",").toSet()
-        filterPhrase(listOfPhrase).forEach { resultSet.add(it) }
-        return filterWords(resultSet).joinToString(",")
+        phrases.split(",").forEach { resultSet.add(it) }
+        val filteredText =  resultSet.stream().collect(Collectors.joining(","))
+
+        val japanesePattern = "[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}]+"
+        return Regex(japanesePattern).findAll(filteredText)
+            .map { it.value }
+            .filter { it.length > 1 }
+            .joinToString(separator = ",")
+
     }
 
     fun filterWords(words: Set<String>): Set<String> {

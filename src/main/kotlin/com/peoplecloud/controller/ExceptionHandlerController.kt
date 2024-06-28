@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.context.request.WebRequest
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 
 @ControllerAdvice
@@ -24,16 +25,19 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(ExceptionHandlerController::class.java)
+        private const val MAX_UPLOAD_SIZE_EXCEEDED = "MAX UPLOAD SIZE EXCEEDED"
+        private const val UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE"
+        private const val UNSUPPORTED_LANGUAGE = "UNSUPPORTED LANGUAGE"
     }
 
     @ExceptionHandler(UnsupportedFileType::class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     fun unsupportedFileTypeException(e: UnsupportedFileType): ResponseEntity<ErrorDto> {
-        log.error(e.message)
+        log.error("$UNSUPPORTED_FILE_TYPE: ${e.message}")
         return ResponseEntity.ok(
             ErrorDto(
                 errorCode = HttpStatus.BAD_REQUEST,
-                errorMessage = e.message!!
+                errorMessage = "$UNSUPPORTED_FILE_TYPE: ${e.message}"
             )
         )
     }
@@ -41,11 +45,23 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
     @ExceptionHandler(UnsupportedLanguageException::class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     fun unsupportedLanguageException(e: UnsupportedLanguageException): ResponseEntity<ErrorDto> {
-        log.error(e.message)
+        log.error("$UNSUPPORTED_LANGUAGE: ${e.message}")
         return ResponseEntity.ok(
             ErrorDto(
                 errorCode = HttpStatus.BAD_REQUEST,
-                errorMessage = e.message!!
+                errorMessage = "$UNSUPPORTED_LANGUAGE: ${e.message}"
+            )
+        )
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    @ResponseStatus(value = HttpStatus.PAYLOAD_TOO_LARGE)
+    fun maxUploadSizeExceededException(e: MaxUploadSizeExceededException): ResponseEntity<ErrorDto> {
+        log.error("$MAX_UPLOAD_SIZE_EXCEEDED: ${e.message}")
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = HttpStatus.PAYLOAD_TOO_LARGE,
+                errorMessage = "$MAX_UPLOAD_SIZE_EXCEEDED: ${e.message}"
             )
         )
     }
