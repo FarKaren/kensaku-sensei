@@ -82,3 +82,22 @@ dependencyManagement {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
+
+jar {
+    // Добавляем содержимое директории python
+    from('python') {
+        include '**'
+    }
+
+    // Добавляем пустую директорию temp
+    from('temp') {
+        includeEmptyDirs = true
+        include '**'
+        eachFile { details ->
+            if (details.file.isFile()) {
+                // Если это файл, то исключаем его
+                details.exclude()
+            }
+        }
+    }
+}

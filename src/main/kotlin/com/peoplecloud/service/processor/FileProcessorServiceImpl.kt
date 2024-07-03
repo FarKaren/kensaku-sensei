@@ -65,6 +65,16 @@ class FileProcessorServiceImpl(
     }
 
 
+    override fun processManualInput(input: String, tgtLang: String): List<PicDataDto> {
+        log.info("method processManualInput() invoked")
+
+        //val translatedWords = translateText(input, tgtLang)
+        val translatedWords = ""
+        val picDataList = zipInputAndTranslatedWords(input, translatedWords)
+
+        return pictureFinder.findPictureByWords(picDataList)
+    }
+
     override fun processFile(file: MultipartFile,  tgtLang: String): List<PicDataDto> {
         log.info("method processFile() invoked")
         this.validateLanguage(tgtLang)
@@ -244,8 +254,22 @@ class FileProcessorServiceImpl(
     private fun handleText(text: String, tgtLang: String): List<PicDataDto> {
         log.info("method handleText() invoked")
         val analyzedText = analyzerService.analyzeText(text)
-        val translateToTgtLang = translateText(analyzedText, tgtLang)
-        val resultWords = translateToTgtLang.split(",").toSet()
-        return pictureFinder.findPictureByWords(resultWords)
+        //val translatedWords = translateText(analyzedText, tgtLang)
+        val translatedWords = ""
+        val picDataList = zipInputAndTranslatedWords(analyzedText, translatedWords)
+
+        return pictureFinder.findPictureByWords(picDataList)
+    }
+
+    private fun zipInputAndTranslatedWords(input: String, translate: String): List<PicDataDto> {
+        val inputSplit = input.split(",").map { it.trim() }
+        val resultSplit = translate.split(",").map { it.trim() }
+
+        val maxLength = maxOf(inputSplit.size, resultSplit.size)
+        return List(maxLength) { index ->
+            val first = inputSplit.getOrElse(index) { "" }
+            val second = resultSplit.getOrElse(index) { "" }
+            PicDataDto(first, second)
+        }
     }
 }

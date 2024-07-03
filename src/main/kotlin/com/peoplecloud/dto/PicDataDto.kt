@@ -1,6 +1,7 @@
 package com.peoplecloud.dto
 
 data class PicDataDto(
-    val word: String,
-    val urls: List<String>
+    val sourceWord: String,
+    val targetWord: String,
+    var urls: List<String> = emptyList()
 )

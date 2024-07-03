@@ -27,6 +27,9 @@ class SeleniumConfig {
                 addArguments("--disable-web-security")
                 addArguments("--disable-gpu")
                 addArguments("--remote-allow-origins=*")
+                //addArguments("--headless")
+                addArguments("--no-sandbox")
+                addArguments("--disable-software-rasterizer")
                 setBinary("/usr/local/bin/chrome")
             }
 
