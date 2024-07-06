@@ -1,7 +1,6 @@
 package com.peoplecloud.service.processor
 
-import com.peoplecloud.client.LibretranslateClient
-import com.peoplecloud.client.LibretranslateRq
+import com.deepl.api.Translator
 import com.peoplecloud.dto.PicDataDto
 import com.peoplecloud.dto.exception.UnsupportedLanguageException
 import com.peoplecloud.exceptions.UnsupportedFileType
@@ -30,9 +29,9 @@ import javax.imageio.ImageIO
 
 @Service
 class FileProcessorServiceImpl(
-    private val translateClient: LibretranslateClient,
     private val analyzerService: AnalyzerService,
-    private val pictureFinder: PictureFinder
+    private val pictureFinder: PictureFinder,
+    private var translator: Translator
 ) : FileProcessorService {
 
 
@@ -44,11 +43,36 @@ class FileProcessorServiceImpl(
         "Portuguese" to "prt",
         "Russian" to "rus"
     )
-    private val libretranslateLangCode = mapOf(
+    private val deeplLangCode = mapOf(
         "Japanese" to "ja",
-        "English" to "en",
-        "Portuguese" to "pt",
-        "Russian" to "ru"
+        "English" to "en-US",
+        "Portuguese" to "pt-BR",
+        "Russian" to "ru",
+        "Arabic" to "ar",
+        "Bulgarian" to "bg",
+        "Czech" to "cs",
+        "Danish" to "da",
+        "German" to "de",
+        "Greek" to "el",
+        "Spanish" to "es",
+        "Estonian" to "et",
+        "French" to "fr",
+        "Hungarian" to "hu",
+        "Indonesian" to "id",
+        "Italian" to "it",
+        "Korean" to "ko",
+        "Lithuanian" to "lt",
+        "Latvian" to "lv",
+        "Norwegian" to "nb",
+        "Dutch" to "nl",
+        "Polish" to "pl",
+        "Romanian" to "ro",
+        "Slovak" to "sk",
+        "Slovenian" to "sl",
+        "Swedish" to "sv",
+        "Turkish" to "tr",
+        "Ukrainian" to "uk",
+        "Chinese" to "ch"
     )
 
     // Инициализация Tesseract OCR
@@ -68,9 +92,9 @@ class FileProcessorServiceImpl(
     override fun processManualInput(input: String, tgtLang: String): List<PicDataDto> {
         log.info("method processManualInput() invoked")
 
-        //val translatedWords = translateText(input, tgtLang)
-        val translatedWords = ""
-        val picDataList = zipInputAndTranslatedWords(input, translatedWords)
+        val lang = deeplLangCode[tgtLang]
+        val translatedWords = translator.translateText(input, "ja", lang)
+        val picDataList = zipInputAndTranslatedWords(input, translatedWords.text)
 
         return pictureFinder.findPictureByWords(picDataList)
     }
@@ -232,21 +256,10 @@ class FileProcessorServiceImpl(
         }
     }
 
-    private fun translateText(text: String,  tgtLang: String): String {
-        log.info("method translateText() invoked")
-        val translationRequest = LibretranslateRq(
-            q = text,
-            source = libretranslateLangCode[SRC_LANG]!!,
-            target = libretranslateLangCode[tgtLang]!!
-        )
-        val translationResponse = translateClient.translate(translationRequest)
-        return translationResponse.translatedText
-    }
-
     private fun validateLanguage(tgtLang: String) {
         log.info("method validateLanguage() invoked")
         if (!tesseractLangCode.keys.contains(tgtLang) ||
-            !libretranslateLangCode.keys.contains(tgtLang)
+            !deeplLangCode.keys.contains(tgtLang)
         )
             throw UnsupportedLanguageException(tgtLang)
     }
@@ -254,16 +267,16 @@ class FileProcessorServiceImpl(
     private fun handleText(text: String, tgtLang: String): List<PicDataDto> {
         log.info("method handleText() invoked")
         val analyzedText = analyzerService.analyzeText(text)
-        //val translatedWords = translateText(analyzedText, tgtLang)
-        val translatedWords = ""
-        val picDataList = zipInputAndTranslatedWords(analyzedText, translatedWords)
+        val lang = deeplLangCode[tgtLang]
+        val translatedWords = translator.translateText(analyzedText, "ja", lang)
+        val picDataList = zipInputAndTranslatedWords(analyzedText, translatedWords.text)
 
         return pictureFinder.findPictureByWords(picDataList)
     }
 
     private fun zipInputAndTranslatedWords(input: String, translate: String): List<PicDataDto> {
-        val inputSplit = input.split(",").map { it.trim() }
-        val resultSplit = translate.split(",").map { it.trim() }
+        val inputSplit = input.split(";").map { it.trim() }
+        val resultSplit = translate.split(";").map { it.trim() }
 
         val maxLength = maxOf(inputSplit.size, resultSplit.size)
         return List(maxLength) { index ->

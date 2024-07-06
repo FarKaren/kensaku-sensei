@@ -3,17 +3,8 @@ server:
 
 spring:
   application:
-    name: translate-helper
-  cloud:
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 5000
-            readTimeout: 120000
-          libretranslate-client:
-            connectTimeout: 5000
-            readTimeout: 120000
+    name: jpn-text-analyzer
+
   servlet:
     multipart:
       max-file-size: 10MB  # Максимальный размер одного загружаемого файла
@@ -21,10 +12,17 @@ spring:
       file-size-threshold: 2KB  # Размер файла, после которого он должен быть записан на диск
 
 
-feign:
-  client:
-    libretranslate-client:
-      url: http://127.0.0.1:5000
+
+springdoc:
+  swagger-ui:
+    url: /v3/api-docs
+    disable-swagger-default-url: false
+    path: /swagger-ui.html
+    enabled: true
+    api-docs:
+      path: /v3/api-docs
+      versions:
+        openapi_3.0: OpenAPI 3.0
 
 pictureSearchUrl: "https://duckduckgo.com/?q=$query&iar=images&iax=images&ia=images&p=1"
 

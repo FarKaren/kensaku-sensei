@@ -1,11 +1,14 @@
 package com.peoplecloud.controller
 
+import com.deepl.api.QuotaExceededException
+import com.deepl.api.TooManyRequestsException
 import com.peoplecloud.dto.exception.ErrorDto
 import com.peoplecloud.dto.exception.UnsupportedLanguageException
 import com.peoplecloud.dto.exception.ValidationErrorResponse
 import com.peoplecloud.dto.exception.Violation
 import com.peoplecloud.exceptions.UnsupportedFileType
 import jakarta.validation.ConstraintViolationException
+import org.openqa.selenium.TimeoutException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -28,6 +31,9 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         private const val MAX_UPLOAD_SIZE_EXCEEDED = "MAX UPLOAD SIZE EXCEEDED"
         private const val UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE"
         private const val UNSUPPORTED_LANGUAGE = "UNSUPPORTED LANGUAGE"
+        private const val TIMEOUT_EXCEPTION = "TIMEOUT EXCEPTION"
+        private const val QUOTA_EXCEEDED_EXCEPTION = "QUOTA EXCEEDED EXCEPTION"
+        private const val TOO_MANY_REQUEST = "TOO MANY REQUEST"
     }
 
     @ExceptionHandler(UnsupportedFileType::class)
@@ -36,7 +42,7 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         log.error("$UNSUPPORTED_FILE_TYPE: ${e.message}")
         return ResponseEntity.ok(
             ErrorDto(
-                errorCode = HttpStatus.BAD_REQUEST,
+                errorCode = HttpStatus.BAD_REQUEST.value(),
                 errorMessage = "$UNSUPPORTED_FILE_TYPE: ${e.message}"
             )
         )
@@ -48,7 +54,7 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         log.error("$UNSUPPORTED_LANGUAGE: ${e.message}")
         return ResponseEntity.ok(
             ErrorDto(
-                errorCode = HttpStatus.BAD_REQUEST,
+                errorCode = HttpStatus.BAD_REQUEST.value(),
                 errorMessage = "$UNSUPPORTED_LANGUAGE: ${e.message}"
             )
         )
@@ -60,7 +66,7 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         log.error("$MAX_UPLOAD_SIZE_EXCEEDED: ${e.message}")
         return ResponseEntity.ok(
             ErrorDto(
-                errorCode = HttpStatus.PAYLOAD_TOO_LARGE,
+                errorCode = HttpStatus.PAYLOAD_TOO_LARGE.value(),
                 errorMessage = "$MAX_UPLOAD_SIZE_EXCEEDED: ${e.message}"
             )
         )
@@ -72,8 +78,43 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         log.error(e.message)
         return ResponseEntity.ok(
             ErrorDto(
-                errorCode = HttpStatus.INTERNAL_SERVER_ERROR,
+                errorCode = HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 errorMessage = e.message!!
+            )
+        )
+    }
+
+    @ExceptionHandler(TimeoutException::class)
+    @ResponseStatus(value = HttpStatus.REQUEST_TIMEOUT)
+    fun seleniumTimeoutException(e: TimeoutException): ResponseEntity<ErrorDto> {
+        log.error(e.message)
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = HttpStatus.REQUEST_TIMEOUT.value(),
+                errorMessage = "$TIMEOUT_EXCEPTION: ${e.message}"
+            )
+        )
+    }
+
+    @ExceptionHandler(QuotaExceededException::class)
+    fun deeplQuotaExceededException(e: QuotaExceededException): ResponseEntity<ErrorDto> {
+        log.error(e.message)
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = 456,
+                errorMessage = "$QUOTA_EXCEEDED_EXCEPTION: ${e.message}"
+            )
+        )
+    }
+
+    @ExceptionHandler(TooManyRequestsException::class)
+    @ResponseStatus(value = HttpStatus.TOO_MANY_REQUESTS)
+    fun deeplTooManyRequestsException(e: TooManyRequestsException): ResponseEntity<ErrorDto> {
+        log.error(e.message)
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = HttpStatus.TOO_MANY_REQUESTS.value(),
+                errorMessage = "$TOO_MANY_REQUEST: ${e.message}"
             )
         )
     }

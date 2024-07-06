@@ -24,7 +24,7 @@ class AnalyzerServiceImpl : AnalyzerService {
         val projectPath = Paths.get("").toAbsolutePath().toString()
         try {
             val processBuilder =
-                ProcessBuilder("$projectPath/myenv/bin/python3", SCRIPT_DIR_PATH, text, "en")
+                ProcessBuilder("$projectPath/myenv/bin/python3", SCRIPT_DIR_PATH, text)
             val process = processBuilder.start()
 
             val executorService = Executors.newFixedThreadPool(2)
@@ -55,8 +55,8 @@ class AnalyzerServiceImpl : AnalyzerService {
             // Проверяем, что файл создан
             if (Files.exists(Paths.get(OUTPUT_FILE_PATH))) {
                 try {
-                    val translatedText = Files.readString(Paths.get(OUTPUT_FILE_PATH))
-                    return this.parseTxtFile(translatedText)
+                    val result = Files.readString(Paths.get(OUTPUT_FILE_PATH))
+                    return filterWords(result)
                 } catch (e: IOException) {
                     throw RuntimeException("Ошибка при чтении файла перевода", e)
                 }
@@ -82,29 +82,34 @@ class AnalyzerServiceImpl : AnalyzerService {
         return output.toString()
     }
 
-    private fun parseTxtFile(text: String): String {
-        log.info("method parseTxtFile() invoked")
-        val preparedText = text.replace("\n", "")
-        val rareWords = preparedText.substringAfter("Rare Words:").substringBefore("Phrases:")
-            .lowercase().split(",").toList()
-        val phrases = preparedText.substringAfter("Phrases:").lowercase()
+    fun filterWords(input: String): String {
+        val set = input.substringAfter("Rare Words:")
+            .trim()
+            .split(";")
+            .toSet()
 
-        val resultSet = HashSet<String>()
-
-        rareWords.forEach {
-            if (!phrases.contains(it))
-                resultSet.add(it)
-        }
-        phrases.split(",").forEach { resultSet.add(it) }
-        val filteredText =  resultSet.stream().collect(Collectors.joining(","))
-
-        val japanesePattern = "[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}]+"
-        return Regex(japanesePattern).findAll(filteredText)
-            .map { it.value }
-            .filter { it.length > 1 }
-            .joinToString(separator = ",")
-
+        return set.stream().collect(Collectors.joining(";"))
     }
+
+
+//    private fun parseTxtFile(text: String): String {
+//        log.info("method parseTxtFile() invoked")
+//        val preparedText = text.replace("\n", "")
+//        val rareWords = preparedText.substringAfter("Rare Words:")
+//            .lowercase().split(",").toList()
+//
+//        val resultSet = HashSet<String>()
+//
+//        phrases.split(",").forEach { resultSet.add(it) }
+//        val filteredText =  resultSet.stream().collect(Collectors.joining(","))
+//
+//        val japanesePattern = "[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}]+"
+//        return Regex(japanesePattern).findAll(filteredText)
+//            .map { it.value }
+//            .filter { it.length > 1 }
+//            .joinToString(separator = ",")
+//
+//    }
 
     fun filterWords(words: Set<String>): Set<String> {
         //Delete non symbols words and words which <3 symbols

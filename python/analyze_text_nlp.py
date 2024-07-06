@@ -1,105 +1,107 @@
-import os
-import sys
 import pandas as pd
 import MeCab
 import re
+import logging
+import argparse
+import unidic
+import os
 
-# Загрузка словаря частотности японских слов из XLSX
-def load_common_words(filepath):
-    df = pd.read_excel(filepath)
-    common_words = set(df['レマ'].tolist())
-    return common_words
+# Настройка логирования
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
-# Функция для токенизации текста на японском и фильтрации
-def tokenize_and_filter(text, mecab):
-    node = mecab.parseToNode(text)
-    words = []
+# Создаем формат для логирования
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# Обработчик для логирования в консоль
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# Порог частоты
+TRESHOLD = 5000
+
+# Функция для предобработки текста
+def preprocess_text(text: str) -> str:
+    text = re.sub(r'\s+', ' ', text)
+    return text
+
+# Проверка, является ли текст катаканой
+def is_katakana(text: str) -> bool:
+    return all('\u30A0' <= char <= '\u30FF' for char in text)
+
+# Проверка, является ли текст японским
+def is_japanese(text: str) -> bool:
+    return all('\u3040' <= char <= '\u30FF' or '\u4E00' <= char <= '\u9FFF' for char in text)
+
+# Проверка на валидность базовой формы
+def is_valid_base_form(base_form: str) -> bool:
+    if len(base_form) <= 1:
+        return False
+    if any(char.isdigit() for char in base_form):
+        return False
+    if not is_japanese(base_form):
+        return False
+    return not is_katakana(base_form)
+
+def main(text: str):
+    # Чтение частотного словаря
+    logging.info("Loading frequency dictionary...")
+    frequency_data = pd.read_excel('./python/NLT1.40_freq_list.xlsx', names=['レマ', '品詞', '読み', '頻度'])
+    frequency_dict = dict(zip(frequency_data['レマ'], frequency_data['頻度']))
+
+    text = preprocess_text(text)
+
+    # Инициализация MeCab с использованием unidic
+    tagger = MeCab.Tagger(r'-d "/home/karen/IdeaProjects/translat-helper/myenv/lib/python3.10/site-packages/unidic/dicdir"')
+    node = tagger.parseToNode(text)
+    rare_words = []
+
+    logging.info("Processing text...")
     while node:
-        if node.surface:
-            features = node.feature.split(',')
-            pos = features[0]
-            lemma = features[6] if len(features) > 6 and features[6] != '*' else node.surface
-
-            # Исключаем пунктуацию и частицы
-            if pos not in ('記号', '助詞', '助動詞', '接続詞') and pos:
-                # Используем лемму (базовую форму) вместо поверхности
-                words.append({'surface': node.surface, 'pos': pos, 'lemma': lemma})
-        node = node.next
-    return words
-
-# Функция для извлечения фраз (фокус на редких и длинных словах)
-def extract_phrases(words, common_words):
-    phrases = []
-    current_phrase = []
-
-    for word_data in words:
-        lemma = word_data['lemma']
-        pos = word_data['pos']
-
-        if lemma not in common_words and len(lemma) > 1 and pos not in ('記号', '助詞', '助動詞', '接続詞'):
-            current_phrase.append(lemma)
+        surface = node.surface
+        features = node.feature.split(',')
+        if len(surface) == 0:
+            node = node.next
+            continue
+        if len(features) >= 7:
+            base_form = features[7] if features[6] != '*' else surface
         else:
-            if current_phrase:
-                phrases.append(''.join(current_phrase))
-                current_phrase = []
+            base_form = surface
 
-    if current_phrase:
-        phrases.append(''.join(current_phrase))
+        if is_valid_base_form(base_form):
+            # Проверка на наличие в частотном словаре
+            if base_form not in frequency_dict:
+                node = node.next
+                continue
 
-    return list(set(phrases))  # убираем дубликаты
+            value = frequency_dict[base_form]
 
-# Основная функция для анализа текста и выделения редких слов и фраз
-def analyze_text(text, common_words, mecab):
-    words_data = tokenize_and_filter(text, mecab)
-    words = [word['lemma'] for word in words_data if word['lemma'] and word['lemma'] not in common_words and len(word['lemma']) > 1]
+            if value < TRESHOLD:
+                if features[0] not in ['助詞', '助動詞', '接続詞', '記号', '補助記号', '代名詞', '副詞', '連体詞', '感動詞']:
+                    logging.debug(f"Part of speech (品詞): {features[0]}")
+                    rare_words.append(base_form)
+                else:
+                    logging.debug(f"Excluded due to part of speech: {features[0]}")
 
-    # Идентифицируем редкие слова
-    rare_words = list(set(words))
+        node = node.next
 
-    # Извлечение научных фраз
-    phrases = extract_phrases(words_data, common_words)
+    logging.info(f"Rare words: {set(rare_words)}")
 
-    return rare_words, phrases
+    # Запись результатов в файл
+    output_path = './temp/analyzed_text.txt'
 
-# Получаем директорию текущего скрипта
-current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Создаем директорию, если она не существует
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-# Формируем полный путь к файлу
-xlsx_filepath = os.path.join(current_script_dir, 'NLT1.40_freq_list.xlsx')
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write("Rare Words:\n")
+        f.write(";".join(rare_words) + "\n")
 
-# Загрузка часто используемых слов
-common_words = load_common_words(xlsx_filepath)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process some text.")
+    parser.add_argument('text', type=str, help='Text to process')
 
-# Инициализация MeCab
-mecab = MeCab.Tagger()
-
-# Получение текстового аргумента из командной строки
-if len(sys.argv) < 2:
-    print("Usage: python script.py \"<text>\"")
-    sys.exit(1)
-
-# Объединение всех аргументов в один текст
-input_text = " ".join(sys.argv[1:])
-
-# Анализ текста
-rare_words, phrases = analyze_text(input_text, common_words, mecab)
-
-# Вывод результатов
-if rare_words:
-    print("Rare Words:")
-    print("、".join(rare_words) + "\n")
-else:
-    print("No rare words found.\n")
-
-if phrases:
-    print("Scientific Phrases:")
-    print("、".join(phrases) + "\n")
-else:
-    print("No scientific phrases found.\n")
-
-output_path = './temp/analyzed_text.txt'
-with open(output_path, "w", encoding="utf-8") as f:
-    f.write("Rare Words:\n")
-    f.write(", ".join(rare_words) + "\n\n")
-    f.write("Phrases:\n")
-    f.write(", ".join(phrases) + "\n")
+    args = parser.parse_args()
+    main(args.text)
