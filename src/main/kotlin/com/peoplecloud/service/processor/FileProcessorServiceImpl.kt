@@ -196,7 +196,7 @@ class FileProcessorServiceImpl(
             val bim = pdfRenderer.renderImageWithDPI(page, 300F, ImageType.RGB)
             val processedImage =
                 preprocessImage(bim) // Добавляем предварительную обработку изображения// Увеличиваем масштаб изображения
-            sb.append(extractTextFromImage(processedImage, SRC_LANG))
+            sb.append(extractTextFromImage(processedImage))
                 .append("\n") // Используйте "eng" или другой язык по умолчанию
         }
 
