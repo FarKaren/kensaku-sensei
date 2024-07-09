@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-07--001--create_deepl_lang_table.yaml
+  - changeSet:
+      id: create-deepl_langs
+      author: Karen
+      changes:
+        - createTable:
+            tableName: deepl_langs
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: language
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: varchar(10)
+              - column:
+                  name: is_supported
+                  type: boolean
+
+  - changeSet:
+      id: language_ids
+      author: Karen
+      changes:
+        - createIndex:
+            indexName: idx_language
+            tableName: deepl_langs
+            columns:
+              - column:
+                  name: language

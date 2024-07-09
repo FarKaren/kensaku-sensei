@@ -1,4 +1,4 @@
-package com.peoplecloud.dto
+package com.peoplecloud.dto.processor
 
 import io.swagger.v3.oas.annotations.media.Schema
 

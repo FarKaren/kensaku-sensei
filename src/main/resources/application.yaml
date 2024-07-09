@@ -4,7 +4,17 @@ server:
 spring:
   application:
     name: jpn-text-analyzer
-
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/analyzer
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:pass}
+    driverClassName: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    enabled: true
   servlet:
     multipart:
       max-file-size: 10MB  # Максимальный размер одного загружаемого файла
@@ -24,6 +34,6 @@ springdoc:
       versions:
         openapi_3.0: OpenAPI 3.0
 
-pictureSearchUrl: "https://duckduckgo.com/?q=$query&iar=images&iax=images&ia=images&p=1"
+pictureSearchUrl: "https://duckduckgo.com/?q=$query&kp=-2&iar=images&iax=images&ia=images&p=1"
 
 

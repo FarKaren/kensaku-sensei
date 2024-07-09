@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-07--001--create_portuguese_table.yaml
+  - changeSet:
+      id: create-portuguese
+      author: Karen
+      changes:
+        - createTable:
+            tableName: portuguese
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: japanese
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: portuguese
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: portuguese_pictures
+            columns:
+              - column:
+                  name: portuguese_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pictures
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: portuguese_pictures
+            baseColumnNames: portuguese_id
+            referencedTableName: portuguese
+            referencedColumnNames: id
+            constraintName: fk_english_pictures_portuguese
+
+  - changeSet:
+      id: portuguese_language_ids
+      author: Karen
+      changes:
+        - createIndex:
+            indexName: idx_portuguese_language
+            tableName: portuguese
+            columns:
+              - column:
+                  name: portuguese

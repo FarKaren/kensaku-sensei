@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-07--001--create_english_table.yaml
+  - changeSet:
+      id: create-english
+      author: Karen
+      changes:
+        - createTable:
+            tableName: english
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: japanese
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: english
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: english_pictures
+            columns:
+              - column:
+                  name: english_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pictures
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: english_pictures
+            baseColumnNames: english_id
+            referencedTableName: english
+            referencedColumnNames: id
+            constraintName: fk_english_pictures_english
+
+  - changeSet:
+      id: english_language_ids
+      author: Karen
+      changes:
+        - createIndex:
+            indexName: idx_english_language
+            tableName: english
+            columns:
+              - column:
+                  name: english

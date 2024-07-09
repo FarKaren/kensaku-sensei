@@ -20,7 +20,7 @@ console_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 
 # Порог частоты
-TRESHOLD = 5000
+TRESHOLD = 20000
 
 # Функция для предобработки текста
 def preprocess_text(text: str) -> str:

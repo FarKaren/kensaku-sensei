@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-07--001--create_russian_table.yaml
+  - changeSet:
+      id: create-russian
+      author: Karen
+      changes:
+        - createTable:
+            tableName: russian
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: japanese
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: russian
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: russian_pictures
+            columns:
+              - column:
+                  name: russian_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pictures
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: russian_pictures
+            baseColumnNames: russian_id
+            referencedTableName: portuguese
+            referencedColumnNames: id
+            constraintName: fk_english_pictures_russian
+
+  - changeSet:
+      id: russian_language_ids
+      author: Karen
+      changes:
+        - createIndex:
+            indexName: idx_russian_language
+            tableName: russian
+            columns:
+              - column:
+                  name: russian

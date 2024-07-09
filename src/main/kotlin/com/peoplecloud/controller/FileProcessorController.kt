@@ -1,9 +1,9 @@
 package com.peoplecloud.controller
 
 
-import com.peoplecloud.dto.FileDataDto
-import com.peoplecloud.dto.ProcessFileRq
-import com.peoplecloud.dto.ProcessFileRs
+import com.peoplecloud.dto.processor.FileDataDto
+import com.peoplecloud.dto.processor.ProcessFileRq
+import com.peoplecloud.dto.processor.ProcessFileRs
 import com.peoplecloud.dto.exception.ErrorDto
 import com.peoplecloud.service.processor.FileProcessorService
 import io.swagger.v3.oas.annotations.Operation
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/analyzer")
 class FileProcessorController(
     private val fileProcessorService: FileProcessorService
 ) {
@@ -39,7 +39,7 @@ class FileProcessorController(
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "Invalid request or unsupported file type/language",
+                description = "Invalid request or UNSUPPORTED FILE TYPE or UNSUPPORTED LANGUAGE",
                 content = [Content(schema = Schema(implementation = ErrorDto::class))]
             ),
             ApiResponse(
@@ -69,7 +69,7 @@ class FileProcessorController(
             )
         ]
     )
-    @PostMapping("/analyzer")
+    @PostMapping
     fun analyze(@ModelAttribute request: ProcessFileRq): ResponseEntity<ProcessFileRs> {
         val fileProcessResults = mutableListOf<FileDataDto>()
 

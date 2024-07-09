@@ -1,7 +1,7 @@
 package com.peoplecloud.service.findare
 
 import com.peoplecloud.config.AppConfigProperty
-import com.peoplecloud.dto.PicDataDto
+import com.peoplecloud.dto.processor.PicDataDto
 import org.openqa.selenium.By
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.support.ui.ExpectedConditions

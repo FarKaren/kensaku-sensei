@@ -1,6 +1,6 @@
 package com.peoplecloud.service.processor
 
-import com.peoplecloud.dto.PicDataDto
+import com.peoplecloud.dto.processor.PicDataDto
 import org.springframework.web.multipart.MultipartFile
 
 interface FileProcessorService {

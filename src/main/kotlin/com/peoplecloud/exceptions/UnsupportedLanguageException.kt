@@ -1,4 +1,4 @@
-package com.peoplecloud.dto.exception
+package com.peoplecloud.exceptions
 
 class UnsupportedLanguageException(message: String): RuntimeException(message) {
 }

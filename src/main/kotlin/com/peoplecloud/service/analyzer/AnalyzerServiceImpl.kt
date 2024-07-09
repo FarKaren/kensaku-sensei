@@ -90,45 +90,4 @@ class AnalyzerServiceImpl : AnalyzerService {
 
         return set.stream().collect(Collectors.joining(";"))
     }
-
-
-//    private fun parseTxtFile(text: String): String {
-//        log.info("method parseTxtFile() invoked")
-//        val preparedText = text.replace("\n", "")
-//        val rareWords = preparedText.substringAfter("Rare Words:")
-//            .lowercase().split(",").toList()
-//
-//        val resultSet = HashSet<String>()
-//
-//        phrases.split(",").forEach { resultSet.add(it) }
-//        val filteredText =  resultSet.stream().collect(Collectors.joining(","))
-//
-//        val japanesePattern = "[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}]+"
-//        return Regex(japanesePattern).findAll(filteredText)
-//            .map { it.value }
-//            .filter { it.length > 1 }
-//            .joinToString(separator = ",")
-//
-//    }
-
-    fun filterWords(words: Set<String>): Set<String> {
-        //Delete non symbols words and words which <3 symbols
-        return words.map { phrase ->
-            phrase.split(" ").map { word ->
-                word.replace("-", "")
-                    .replace("""[^a-zA-Zа-яА-Я]""".toRegex(), "")
-            }.filter { it.length >= 3 }
-                .joinToString(" ")
-        }.filter { it.isNotEmpty() }.toSet()
-    }
-
-    fun filterPhrase(phrases: Set<String>): Set<String> {
-        return phrases.map { phrase ->
-            phrase.replace("-", " ")
-                .split(" ").map { word ->
-                    word.trim().replace("""[^a-zA-Zа-яА-Я]""".toRegex(), "")
-                }.filter { it.length >= 3 }
-                .joinToString(" ")
-        }.filter { it.isNotEmpty() && it.contains(" ") }.toSet()
-    }
 }

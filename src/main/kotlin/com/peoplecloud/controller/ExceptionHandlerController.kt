@@ -3,9 +3,10 @@ package com.peoplecloud.controller
 import com.deepl.api.QuotaExceededException
 import com.deepl.api.TooManyRequestsException
 import com.peoplecloud.dto.exception.ErrorDto
-import com.peoplecloud.dto.exception.UnsupportedLanguageException
+import com.peoplecloud.exceptions.UnsupportedLanguageException
 import com.peoplecloud.dto.exception.ValidationErrorResponse
 import com.peoplecloud.dto.exception.Violation
+import com.peoplecloud.exceptions.EntityNotFoundException
 import com.peoplecloud.exceptions.UnsupportedFileType
 import jakarta.validation.ConstraintViolationException
 import org.openqa.selenium.TimeoutException
@@ -29,11 +30,12 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
     companion object {
         val log: Logger = LoggerFactory.getLogger(ExceptionHandlerController::class.java)
         private const val MAX_UPLOAD_SIZE_EXCEEDED = "MAX UPLOAD SIZE EXCEEDED"
-        private const val UNSUPPORTED_FILE_TYPE = "UNSUPPORTED_FILE_TYPE"
+        private const val UNSUPPORTED_FILE_TYPE = "UNSUPPORTED FILE TYPE"
         private const val UNSUPPORTED_LANGUAGE = "UNSUPPORTED LANGUAGE"
         private const val TIMEOUT_EXCEPTION = "TIMEOUT EXCEPTION"
         private const val QUOTA_EXCEEDED_EXCEPTION = "QUOTA EXCEEDED EXCEPTION"
         private const val TOO_MANY_REQUEST = "TOO MANY REQUEST"
+        private const val ENTITY_NOT_FOUND_EXCEPTION = "ENTITY NOT FOUND EXCEPTION"
     }
 
     @ExceptionHandler(UnsupportedFileType::class)
@@ -115,6 +117,18 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
             ErrorDto(
                 errorCode = HttpStatus.TOO_MANY_REQUESTS.value(),
                 errorMessage = "$TOO_MANY_REQUEST: ${e.message}"
+            )
+        )
+    }
+
+    @ExceptionHandler(EntityNotFoundException::class)
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
+    fun entityNotFoundException(e: EntityNotFoundException): ResponseEntity<ErrorDto> {
+        log.error(e.message)
+        return ResponseEntity.ok(
+            ErrorDto(
+                errorCode = HttpStatus.BAD_REQUEST.value(),
+                errorMessage = "$ENTITY_NOT_FOUND_EXCEPTION: ${e.message}"
             )
         )
     }
