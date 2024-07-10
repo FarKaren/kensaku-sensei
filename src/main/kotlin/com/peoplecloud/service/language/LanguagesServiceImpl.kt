@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class LanguagesServiceImpl(
     private val deeplLangRepository: DeeplLangRepository
-): LanguagesService {
+) : LanguagesService {
 
     companion object {
         val log: Logger = LoggerFactory.getLogger(LanguagesServiceImpl::class.java)
@@ -21,7 +21,9 @@ class LanguagesServiceImpl(
     override fun languages(): LanguageListRs {
         log.info("languages invoked")
 
-        val languages = deeplLangRepository.findAll().map { it.toLanguageDto() }
+        val languages = deeplLangRepository.findAll()
+            .filter { it.language != "Japanese" }
+            .map { it.toLanguageDto() }
         return LanguageListRs(languages)
     }
 }

@@ -8,15 +8,17 @@ import com.peoplecloud.dto.exception.ValidationErrorResponse
 import com.peoplecloud.dto.exception.Violation
 import com.peoplecloud.exceptions.EntityNotFoundException
 import com.peoplecloud.exceptions.UnsupportedFileType
+import com.peoplecloud.exceptions.YandexDictionaryClientException
 import jakarta.validation.ConstraintViolationException
-import org.openqa.selenium.TimeoutException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -36,6 +38,9 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         private const val QUOTA_EXCEEDED_EXCEPTION = "QUOTA EXCEEDED EXCEPTION"
         private const val TOO_MANY_REQUEST = "TOO MANY REQUEST"
         private const val ENTITY_NOT_FOUND_EXCEPTION = "ENTITY NOT FOUND EXCEPTION"
+       // private const val dictionaryErrorCods = mapOf(
+
+        //)
     }
 
     @ExceptionHandler(UnsupportedFileType::class)
@@ -86,17 +91,28 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         )
     }
 
-    @ExceptionHandler(TimeoutException::class)
-    @ResponseStatus(value = HttpStatus.REQUEST_TIMEOUT)
-    fun seleniumTimeoutException(e: TimeoutException): ResponseEntity<ErrorDto> {
+    @ExceptionHandler(YandexDictionaryClientException::class)
+    fun yandexDictionaryClientException(e: YandexDictionaryClientException): ResponseEntity<ErrorDto> {
         log.error(e.message)
         return ResponseEntity.ok(
             ErrorDto(
-                errorCode = HttpStatus.REQUEST_TIMEOUT.value(),
-                errorMessage = "$TIMEOUT_EXCEPTION: ${e.message}"
+                errorCode = 418,
+                errorMessage = e.message!!
             )
         )
     }
+
+//    @ExceptionHandler(TimeoutException::class)
+//    @ResponseStatus(value = HttpStatus.REQUEST_TIMEOUT)
+//    fun seleniumTimeoutException(e: TimeoutException): ResponseEntity<ErrorDto> {
+//        log.error(e.message)
+//        return ResponseEntity.ok(
+//            ErrorDto(
+//                errorCode = HttpStatus.REQUEST_TIMEOUT.value(),
+//                errorMessage = "$TIMEOUT_EXCEPTION: ${e.message}"
+//            )
+//        )
+//    }
 
     @ExceptionHandler(QuotaExceededException::class)
     fun deeplQuotaExceededException(e: QuotaExceededException): ResponseEntity<ErrorDto> {
@@ -163,4 +179,36 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
             }.toList()
         return ResponseEntity.ok(ValidationErrorResponse(violations))
     }
+
+    override fun handleHttpMessageNotReadable(
+        ex: HttpMessageNotReadableException,
+        headers: HttpHeaders,
+        status: HttpStatusCode,
+        request: WebRequest
+    ): ResponseEntity<Any>? {
+        log.error("Input error: {}", ex.message)
+
+        val errorDto = ErrorDto(
+            errorCode = HttpStatus.BAD_REQUEST.value(),
+            errorMessage = "Malformed JSON request: ${ex.message}"
+        )
+
+        return ResponseEntity(errorDto, HttpStatus.BAD_REQUEST)
+    }
+
+    override fun handleMissingServletRequestParameter(
+        ex: MissingServletRequestParameterException,
+        headers: HttpHeaders,
+        status: HttpStatusCode,
+        request: WebRequest
+    ): ResponseEntity<Any>? {
+        log.error(ex.message)
+        val violation = Violation(
+            fieldName = ex.parameterName,
+            message = ex.message
+        )
+        return ResponseEntity.ok(ValidationErrorResponse(listOf(violation)))
+    }
+
+
 }

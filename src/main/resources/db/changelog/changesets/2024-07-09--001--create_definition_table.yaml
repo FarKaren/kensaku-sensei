@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-09--001--create_definition_table.yaml
+  - changeSet:
+      id: create-definition
+      author: Karen
+      changes:
+        - createTable:
+            tableName: definitions
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pos
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: word_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: language
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false

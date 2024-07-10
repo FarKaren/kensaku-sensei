@@ -77,7 +77,7 @@ class TranslateServiceImpl(
         return List(maxLength) { index ->
             val first = inputSplit.getOrElse(index) { "" }
             val second = resultSplit.getOrElse(index) { "" }
-            PicDataDto(first, second)
+            PicDataDto(sourceWord =  first, targetWord =  second)
         }
     }
 }

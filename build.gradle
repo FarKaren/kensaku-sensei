@@ -16,6 +16,9 @@ sourceCompatibility = '17'
 
 repositories {
     mavenCentral()
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    maven { url "https://maven.imagej.net/content/groups/public" }
 }
 
 ext {
@@ -63,11 +66,11 @@ dependencies {
 
     implementation("org.jsoup:jsoup:$jsoupVersion")      // для парсинга HTML
 
-    //Selenium. For google chrome
-    implementation "org.seleniumhq.selenium:selenium-java:$seleniumVersion"
-    implementation "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
-    implementation 'io.github.bonigarcia:webdrivermanager:5.3.1'
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.1.3'
+//    //Selenium. For google chrome
+//    implementation "org.seleniumhq.selenium:selenium-java:$seleniumVersion"
+//    implementation "org.seleniumhq.selenium:selenium-chrome-driver:$seleniumVersion"
+//    implementation 'io.github.bonigarcia:webdrivermanager:5.3.1'
+//    implementation 'org.apache.httpcomponents.client5:httpclient5:5.1.3'
 
     //ApachePOI word file parsing
     implementation "org.apache.poi:poi-ooxml:$apachePoiVersion"
@@ -94,21 +97,21 @@ dependencyManagement {
     }
 }
 
-jar {
-    // Добавляем содержимое директории python
-    from('python') {
-        include '**'
-    }
-
-    // Добавляем пустую директорию temp
-    from('temp') {
-        includeEmptyDirs = true
-        include '**'
-        eachFile { details ->
-            if (details.file.isFile()) {
-                // Если это файл, то исключаем его
-                details.exclude()
-            }
-        }
-    }
-}
+//jar {
+//    // Добавляем содержимое директории python
+//    from('python') {
+//        include '**'
+//    }
+//
+//    // Добавляем пустую директорию temp
+//    from('temp') {
+//        includeEmptyDirs = true
+//        include '**'
+//        eachFile { details ->
+//            if (details.file.isFile()) {
+//                // Если это файл, то исключаем его
+//                details.exclude()
+//            }
+//        }
+//    }
+//}

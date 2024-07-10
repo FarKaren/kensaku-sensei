@@ -35,16 +35,16 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: pictures
-                  type: varchar(255)
+                  type: varchar(1000)
                   constraints:
                     nullable: false
 
         - addForeignKeyConstraint:
             baseTableName: russian_pictures
             baseColumnNames: russian_id
-            referencedTableName: portuguese
+            referencedTableName: russian
             referencedColumnNames: id
-            constraintName: fk_english_pictures_russian
+            constraintName: fk_russian_pictures_russian
 
   - changeSet:
       id: russian_language_ids

@@ -6,6 +6,8 @@ import com.peoplecloud.exceptions.UnsupportedLanguageException
 import com.peoplecloud.models.English
 import com.peoplecloud.models.Portuguese
 import com.peoplecloud.models.Russian
+import com.peoplecloud.models.toPicDataDto
+import com.peoplecloud.repository.DeeplLangRepository
 import com.peoplecloud.repository.EnglishRepository
 import com.peoplecloud.repository.PortugueseRepository
 import com.peoplecloud.repository.RussianRepository
@@ -27,6 +29,7 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.image.RescaleOp
 import java.io.BufferedReader
+import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path
@@ -40,7 +43,8 @@ class FileProcessorServiceImpl(
     private val translateService: TranslateService,
     private val englishRepository: EnglishRepository,
     private val russianRepository: RussianRepository,
-    private val portugueseRepository: PortugueseRepository
+    private val portugueseRepository: PortugueseRepository,
+    private val deeplLangRepository: DeeplLangRepository
 ) : FileProcessorService {
 
 
@@ -51,37 +55,6 @@ class FileProcessorServiceImpl(
         "English" to "eng",
         "Portuguese" to "prt",
         "Russian" to "rus"
-    )
-    private val deeplLangCode = mapOf(
-        "Japanese" to "ja",
-        "English" to "en-US",
-        "Portuguese" to "pt-BR",
-        "Russian" to "ru",
-        "Arabic" to "ar",
-        "Bulgarian" to "bg",
-        "Czech" to "cs",
-        "Danish" to "da",
-        "German" to "de",
-        "Greek" to "el",
-        "Spanish" to "es",
-        "Estonian" to "et",
-        "French" to "fr",
-        "Hungarian" to "hu",
-        "Indonesian" to "id",
-        "Italian" to "it",
-        "Korean" to "ko",
-        "Lithuanian" to "lt",
-        "Latvian" to "lv",
-        "Norwegian" to "nb",
-        "Dutch" to "nl",
-        "Polish" to "pl",
-        "Romanian" to "ro",
-        "Slovak" to "sk",
-        "Slovenian" to "sl",
-        "Swedish" to "sv",
-        "Turkish" to "tr",
-        "Ukrainian" to "uk",
-        "Chinese" to "ch"
     )
 
     // Инициализация Tesseract OCR
@@ -104,8 +77,8 @@ class FileProcessorServiceImpl(
         val data = translateService.translateAndGetPicData(input, tgtLang)
 
         val newPicData = pictureFinder.findPictureByWords(data.newPic)
-        addNewWordsToDatabase(newPicData, data.newWords, tgtLang)
-        return newPicData + data.picFromBb
+        val savedPicData = addNewWordsToDatabase(newPicData, data.newWords, tgtLang)
+        return savedPicData + data.picFromBb
     }
 
     override fun processFile(file: MultipartFile, tgtLang: String): List<PicDataDto> {
@@ -124,7 +97,7 @@ class FileProcessorServiceImpl(
 
     private fun getExtension(filename: String?): String {
         log.info("method getExtension() invoked")
-        if(filename.isNullOrEmpty())
+        if (filename.isNullOrEmpty())
             throw UnsupportedFileType("Unsupported file type: $filename")
         return filename.substringAfterLast('.', "")
     }
@@ -174,6 +147,7 @@ class FileProcessorServiceImpl(
             }
         }
     }
+
 
     private fun processImage(file: MultipartFile): String {
         log.info("method processImage() invoked")
@@ -259,10 +233,8 @@ class FileProcessorServiceImpl(
 
     private fun validateLanguage(tgtLang: String) {
         log.info("method validateLanguage() invoked")
-        if (!tesseractLangCode.keys.contains(tgtLang) ||
-            !deeplLangCode.keys.contains(tgtLang)
-        )
-            throw UnsupportedLanguageException(tgtLang)
+        deeplLangRepository.findByLanguage(tgtLang)
+            ?: throw UnsupportedLanguageException(tgtLang)
     }
 
     private fun handleText(text: String, tgtLang: String): List<PicDataDto> {
@@ -272,13 +244,13 @@ class FileProcessorServiceImpl(
         val data = translateService.translateAndGetPicData(analyzedText, tgtLang)
 
         val newPicData = pictureFinder.findPictureByWords(data.newPic)
-        addNewWordsToDatabase(newPicData, data.newWords, tgtLang)
-        return newPicData + data.picFromBb
+        val savedPicData = addNewWordsToDatabase(newPicData, data.newWords, tgtLang)
+        return savedPicData + data.picFromBb
     }
 
-    private fun addNewWordsToDatabase(pictureData: List<PicDataDto>, newWords: String, tgtLang: String) {
+    private fun addNewWordsToDatabase(pictureData: List<PicDataDto>, newWords: String, tgtLang: String): List<PicDataDto> {
         val newPicDataList = pictureData.filter { newWords.contains(it.sourceWord) }
-        when (tgtLang) {
+        return when (tgtLang) {
             "English" -> {
                 val data = newPicDataList.map {
                     English().apply {
@@ -287,7 +259,7 @@ class FileProcessorServiceImpl(
                         pictures = it.urls
                     }
                 }
-                englishRepository.saveAll(data)
+                englishRepository.saveAll(data).map { it.toPicDataDto() }
             }
 
             "Russian" -> {
@@ -298,7 +270,7 @@ class FileProcessorServiceImpl(
                         pictures = it.urls
                     }
                 }
-                russianRepository.saveAll(data)
+                russianRepository.saveAll(data).map { it.toPicDataDto() }
             }
 
             else -> {
@@ -309,7 +281,7 @@ class FileProcessorServiceImpl(
                         pictures = it.urls
                     }
                 }
-                portugueseRepository.saveAll(data)
+                portugueseRepository.saveAll(data).map { it.toPicDataDto() }
             }
         }
     }

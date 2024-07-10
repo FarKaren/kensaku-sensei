@@ -26,6 +26,7 @@ open class Portuguese {
 
 fun Portuguese.toPicDataDto(): PicDataDto {
     return PicDataDto(
+        id = id!!,
         sourceWord = japanese!!,
         targetWord = portuguese!!,
         urls = pictures ?: emptyList()

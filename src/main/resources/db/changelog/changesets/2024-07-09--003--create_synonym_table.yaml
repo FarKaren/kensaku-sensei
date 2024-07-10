@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-09--003--create_synonym_table.yaml
+  - changeSet:
+      id: create-synonym
+      author: Karen
+      changes:
+        - createTable:
+            tableName: synonyms
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: translation_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseColumnNames: translation_id
+            baseTableName: synonyms
+            constraintName: fk_synonym_translation
+            referencedColumnNames: id
+            referencedTableName: translations

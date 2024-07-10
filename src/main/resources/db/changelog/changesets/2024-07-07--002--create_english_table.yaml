@@ -35,7 +35,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: pictures
-                  type: varchar(255)
+                  type: varchar(1000)
                   constraints:
                     nullable: false
 

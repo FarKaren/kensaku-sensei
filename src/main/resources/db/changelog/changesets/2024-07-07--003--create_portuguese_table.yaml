@@ -35,7 +35,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: pictures
-                  type: varchar(255)
+                  type: varchar(1000)
                   constraints:
                     nullable: false
 
@@ -44,7 +44,7 @@ databaseChangeLog:
             baseColumnNames: portuguese_id
             referencedTableName: portuguese
             referencedColumnNames: id
-            constraintName: fk_english_pictures_portuguese
+            constraintName: fk_portuguese_pictures_portuguese
 
   - changeSet:
       id: portuguese_language_ids

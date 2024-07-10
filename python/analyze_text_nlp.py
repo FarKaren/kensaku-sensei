@@ -46,15 +46,26 @@ def is_valid_base_form(base_form: str) -> bool:
     return not is_katakana(base_form)
 
 def main(text: str):
+    # Определение домашнего каталога пользователя
+    home_dir = os.path.expanduser("~")
+    # Построение полного пути к частотному словарю
+    freq_path = os.path.join(home_dir, "kensakusensei/python/NLT1.40_freq_list.xlsx")
+    # Построение полного пути к временной папке для записи результатов
+    output_path = os.path.join(home_dir, "kensakusensei/temp/analyzed_text.txt")
+
     # Чтение частотного словаря
     logging.info("Loading frequency dictionary...")
-    frequency_data = pd.read_excel('./python/NLT1.40_freq_list.xlsx', names=['レマ', '品詞', '読み', '頻度'])
+#     frequency_data = pd.read_excel('./python/NLT1.40_freq_list.xlsx', names=['レマ', '品詞', '読み', '頻度'])
+    frequency_data = pd.read_excel(freq_path, names=['レマ', '品詞', '読み', '頻度'])
     frequency_dict = dict(zip(frequency_data['レマ'], frequency_data['頻度']))
 
     text = preprocess_text(text)
 
+    # Построение полного пути к dicdir
+    unidic_path = os.path.join(home_dir, "myenv/lib/python3.10/site-packages/unidic/dicdir")
+
     # Инициализация MeCab с использованием unidic
-    tagger = MeCab.Tagger(r'-d "/home/karen/IdeaProjects/translat-helper/myenv/lib/python3.10/site-packages/unidic/dicdir"')
+    tagger = MeCab.Tagger(r'-d "{}"'.format(unidic_path))
     node = tagger.parseToNode(text)
     rare_words = []
 
@@ -80,7 +91,6 @@ def main(text: str):
 
             if value < TRESHOLD:
                 if features[0] not in ['助詞', '助動詞', '接続詞', '記号', '補助記号', '代名詞', '副詞', '連体詞', '感動詞']:
-                    logging.debug(f"Part of speech (品詞): {features[0]}")
                     rare_words.append(base_form)
                 else:
                     logging.debug(f"Excluded due to part of speech: {features[0]}")
@@ -90,7 +100,7 @@ def main(text: str):
     logging.info(f"Rare words: {set(rare_words)}")
 
     # Запись результатов в файл
-    output_path = './temp/analyzed_text.txt'
+    #output_path = './temp/analyzed_text.txt'
 
     # Создаем директорию, если она не существует
     os.makedirs(os.path.dirname(output_path), exist_ok=True)

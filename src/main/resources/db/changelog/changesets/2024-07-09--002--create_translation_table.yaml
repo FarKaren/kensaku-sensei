@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - logicalFilePath: changesets/2024-07-09--002--create_definition_table.yaml
+  - changeSet:
+      id: create-translation
+      author: Karen
+      changes:
+        - createTable:
+            tableName: translations
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: text
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pos
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: definition_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - addForeignKeyConstraint:
+                  baseColumnNames: definition_id
+                  baseTableName: translations
+                  constraintName: fk_translation_definition
+                  referencedColumnNames: id
+                  referencedTableName: definitions

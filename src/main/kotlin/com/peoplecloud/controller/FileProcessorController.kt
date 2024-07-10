@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 
 @RestController
@@ -72,8 +73,12 @@ class FileProcessorController(
     @PostMapping
     fun analyze(@ModelAttribute request: ProcessFileRq): ResponseEntity<ProcessFileRs> {
         val fileProcessResults = mutableListOf<FileDataDto>()
+        val files: List<MultipartFile> =
+            if (request.multipartFiles.isNullOrEmpty())
+                emptyList()
+            else request.multipartFiles
 
-        for (file in request.multipartFiles) {
+        for (file in files) {
             if (file.isEmpty) continue
             val pictureData = fileProcessorService.processFile(file, request.tgtLang)
             fileProcessResults.add(FileDataDto(pictureData))
