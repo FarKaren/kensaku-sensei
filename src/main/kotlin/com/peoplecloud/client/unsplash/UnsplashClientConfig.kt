@@ -1,20 +1,19 @@
 package com.peoplecloud.client.unsplash
 
-import com.peoplecloud.config.Env
+import com.peoplecloud.config.ApiKeysProperty
 import feign.RequestInterceptor
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class UnsplashClientConfig {
-
-    private val unsplashApiKey: String = Env.get("UNSPLASH_API_KEY")
-        ?: throw IllegalArgumentException("UNSPLASH_API_KEY is not defined")
+class UnsplashClientConfig(
+    private val apiKeysProperty: ApiKeysProperty
+) {
 
     @Bean
     fun unsplashRequestInterceptor(): RequestInterceptor {
         return RequestInterceptor { template ->
-            template.header("Authorization", "Client-ID $unsplashApiKey")
+            template.header("Authorization", "Client-ID ${apiKeysProperty.unsplashApiKey}")
         }
     }
 }

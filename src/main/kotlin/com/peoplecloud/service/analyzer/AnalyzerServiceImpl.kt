@@ -16,7 +16,7 @@ class AnalyzerServiceImpl : AnalyzerService {
     companion object {
         val log: Logger = LoggerFactory.getLogger(FileProcessorServiceImpl::class.java)
         private const val SCRIPT_DIR_PATH = "kensakusensei/python/analyze_text_nlp.py"
-        private const val OUTPUT_FILE_PATH = "kensakusensei/temp/analyzed_text.txt"
+        private const val OUTPUT_FILE_PATH = "kensakusensei/files/analyzed_text.txt"
     }
 
     override fun analyzeText(text: String): String {
@@ -24,16 +24,17 @@ class AnalyzerServiceImpl : AnalyzerService {
         val userHomePath = System.getProperty("user.home")
         val projectPath = Paths.get("").toAbsolutePath().toString()
         log.info("Project path: $projectPath")
+        log.info("Path to python: $userHomePath/$SCRIPT_DIR_PATH")
 
         try {
-            log.debug("Building process with script at: $userHomePath/$SCRIPT_DIR_PATH")
+            log.info("Building process with script at: $userHomePath/$SCRIPT_DIR_PATH")
             val processBuilder = ProcessBuilder(
                 "$userHomePath/myenv/bin/python3",
                 "$userHomePath/$SCRIPT_DIR_PATH",
                 text
             )
             processBuilder.directory(File(projectPath))
-            log.debug("Starting process...")
+            log.info("Starting process...")
             val process = processBuilder.start()
 
             val executorService = Executors.newFixedThreadPool(2)

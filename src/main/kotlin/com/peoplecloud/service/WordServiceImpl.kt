@@ -1,7 +1,7 @@
 package com.peoplecloud.service
 
 import com.peoplecloud.client.dictionary.YandexDictionaryClient
-import com.peoplecloud.config.Env
+import com.peoplecloud.config.ApiKeysProperty
 import com.peoplecloud.dto.word.*
 import com.peoplecloud.exceptions.EntityNotFoundException
 import com.peoplecloud.models.DefinitionModel
@@ -23,23 +23,27 @@ class WordServiceImpl(
     private val dictionaryClient: YandexDictionaryClient,
     private val englishRepository: EnglishRepository,
     private val portugueseRepository: PortugueseRepository,
-    private val russianRepository: RussianRepository
+    private val russianRepository: RussianRepository,
+    private val apiKeysProperty: ApiKeysProperty
 ) : WordService {
     companion object {
         val log: Logger = LoggerFactory.getLogger(WordServiceImpl::class.java)
     }
 
-    private val yandexDictionaryApiKey: String = Env.get("YANDEX_DICTIONARY_API_KEY")
-        ?: throw IllegalArgumentException("YANDEX_DICTIONARY_API_KEY is not defined")
-
     @Transactional
     override fun getWordCard(wordId: Long, language: Languages): YandexResponse {
         log.info("method getWordCard() invoked")
-        val lang =
+        val intermediateLang =
             when (language) {
-                Languages.Portuguese -> "pt-pt"
-                Languages.English -> "en-en"
-                Languages.Russian -> "ru-ru"
+                Languages.Portuguese -> "pt-ru"
+                Languages.English -> "en-ru"
+                Languages.Russian -> "ru-en"
+            }
+        val targetLang =
+            when (language) {
+                Languages.Portuguese -> "ru-pt"
+                Languages.English -> "ru-en"
+                Languages.Russian -> "en-ru"
             }
         val word =
             when (language) {
@@ -74,10 +78,16 @@ class WordServiceImpl(
         return if (definitions.isEmpty()) {
             var clientResponse = YandexResponse()
             try {
-                clientResponse = dictionaryClient.lookup(
-                    yandexDictionaryApiKey,
-                    lang,
+                val intermediateTranslate = dictionaryClient.lookup(
+                    apiKeysProperty.yandexDictionaryApiKey,
+                    intermediateLang,
                     word
+                )
+                val intermediateWord = intermediateTranslate.def[0].tr[0].text
+                clientResponse = dictionaryClient.lookup(
+                    apiKeysProperty.yandexDictionaryApiKey,
+                    targetLang,
+                    intermediateWord
                 )
             } catch (e: RuntimeException) {
                 e.printStackTrace()

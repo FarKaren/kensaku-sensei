@@ -47,7 +47,6 @@ dependencies {
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion"
     implementation 'org.liquibase:liquibase-core'
     runtimeOnly 'org.postgresql:postgresql'
-    implementation("io.github.cdimascio:java-dotenv:5.2.2")
 
     //Tesseract
     implementation("net.sourceforge.tess4j:tess4j:$tesseractVersion")
