@@ -70,8 +70,8 @@ class TranslateServiceImpl(
     }
 
     private fun zipInputAndTranslatedWords(input: String, translate: String): List<PicDataDto> {
-        val inputSplit = input.split(";").map { it.trim() }
-        val resultSplit = translate.split(";").map { it.trim() }
+        val inputSplit = input.split(";").map { it.trim().replace(Regex("[!@#\$%^&*?>:.]"), "") }
+        val resultSplit = translate.split(";").map { it.trim().replace(Regex("[!@#\$%^&*?>:.]"), "") }
 
         val maxLength = maxOf(inputSplit.size, resultSplit.size)
         return List(maxLength) { index ->

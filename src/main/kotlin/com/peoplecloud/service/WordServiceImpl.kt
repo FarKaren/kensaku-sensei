@@ -1,6 +1,7 @@
 package com.peoplecloud.service
 
 import com.peoplecloud.client.dictionary.YandexDictionaryClient
+import com.peoplecloud.config.Env
 import com.peoplecloud.dto.word.*
 import com.peoplecloud.exceptions.EntityNotFoundException
 import com.peoplecloud.models.DefinitionModel
@@ -27,6 +28,9 @@ class WordServiceImpl(
     companion object {
         val log: Logger = LoggerFactory.getLogger(WordServiceImpl::class.java)
     }
+
+    private val yandexDictionaryApiKey: String = Env.get("YANDEX_DICTIONARY_API_KEY")
+        ?: throw IllegalArgumentException("YANDEX_DICTIONARY_API_KEY is not defined")
 
     @Transactional
     override fun getWordCard(wordId: Long, language: Languages): YandexResponse {
@@ -71,7 +75,7 @@ class WordServiceImpl(
             var clientResponse = YandexResponse()
             try {
                 clientResponse = dictionaryClient.lookup(
-                    "dict.1.1.20240709T112722Z.0f74a7c05b61085c.2314627141d68c0729c9bb65afc6ca967c34c040",
+                    yandexDictionaryApiKey,
                     lang,
                     word
                 )

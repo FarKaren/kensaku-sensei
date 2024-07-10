@@ -17,6 +17,6 @@ data class Photo(
 )
 
 data class Urls(
-    val raw: String
+    val regular: String
 )
 

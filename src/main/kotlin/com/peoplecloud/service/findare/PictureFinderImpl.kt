@@ -32,7 +32,7 @@ class PictureFinderImpl(
                 try {
                     val searchResult = unsplashClient.searchPhotos(word, 3)
                     log.info("Photo description: ${searchResult.results.map { it.description }}")
-                    picData.urls = searchResult.results.map { it.urls.raw }.toList()
+                    picData.urls = searchResult.results.map { it.urls.regular }.toList()
                     picData
                 } catch (e: Exception) {
                     e.printStackTrace()
