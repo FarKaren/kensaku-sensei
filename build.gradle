@@ -94,21 +94,33 @@ dependencyManagement {
     }
 }
 
-//jar {
-//    // Добавляем содержимое директории python
-//    from('python') {
-//        include '**'
-//    }
-//
-//    // Добавляем пустую директорию temp
-//    from('temp') {
-//        includeEmptyDirs = true
-//        include '**'
-//        eachFile { details ->
-//            if (details.file.isFile()) {
-//                // Если это файл, то исключаем его
-//                details.exclude()
-//            }
-//        }
-//    }
-//}
+jar {
+    // Добавляем содержимое директории python
+    from('python') {
+        include '**'
+    }
+
+    // Добавляем пустую директорию temp
+    from('myenv') {
+        includeEmptyDirs = true
+        include '**'
+        eachFile { details ->
+            if (details.file.isFile()) {
+                // Если это файл, то исключаем его
+                details.exclude()
+            }
+        }
+    }
+
+    // Добавляем пустую директорию temp
+    from('tesseract') {
+        includeEmptyDirs = true
+        include '**'
+        eachFile { details ->
+            if (details.file.isFile()) {
+                // Если это файл, то исключаем его
+                details.exclude()
+            }
+        }
+    }
+}
