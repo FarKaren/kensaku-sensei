@@ -29,7 +29,6 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.awt.image.RescaleOp
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.InputStreamReader
 import java.nio.file.Files
 import java.nio.file.Path

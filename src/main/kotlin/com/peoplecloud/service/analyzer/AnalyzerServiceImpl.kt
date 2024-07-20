@@ -91,69 +91,6 @@ class AnalyzerServiceImpl : AnalyzerService {
         }
     }
 
-//    override fun analyzeText(text: String): String {
-//        log.info("method analyzeText() invoked")
-//        val projectPath = Paths.get("").toAbsolutePath().toString()
-//        try {
-//            val processBuilder =
-//                ProcessBuilder("$projectPath/myenv/bin/python3", SCRIPT_DIR_PATH, text)
-//            val process = processBuilder.start()
-//
-//            val executorService = Executors.newFixedThreadPool(2)
-//
-//            // Запуск потоков для чтения вывода и ошибок
-//            val outputFuture = executorService.submit {
-//                readStream(
-//                    process.inputStream,
-//                    "TRANSLATE PROCESS"
-//                )
-//            }
-//            val errorFuture = executorService.submit {
-//                readStream(
-//                    process.errorStream,
-//                    "ERROR"
-//                )
-//            }
-//
-//            // Ждём завершения процесса
-//            process.waitFor()
-//
-//            // Чтение данных из потоков (ждем их завершения)
-//            outputFuture.get()
-//            errorFuture.get()
-//
-//            executorService.shutdown()
-//
-//            // Проверяем, что файл создан
-//            if (Files.exists(Paths.get(OUTPUT_FILE_PATH))) {
-//                try {
-//                    val result = Files.readString(Paths.get(OUTPUT_FILE_PATH))
-//                    return filterWords(result)
-//                } catch (e: IOException) {
-//                    throw RuntimeException("Ошибка при чтении файла перевода", e)
-//                }
-//            } else {
-//                throw FileNotFoundException("Файл перевода не был найден: $OUTPUT_FILE_PATH")
-//            }
-//        } catch (e: Exception) {
-//            throw RuntimeException("Ошибка при выполнении скрипта перевода", e)
-//        }
-//    }
-
-    private fun readStream(stream: InputStream, logPrefix: String): String {
-        log.info("method readStream() invoked")
-        val output = StringBuilder()
-        BufferedReader(InputStreamReader(stream, "UTF-8")).use { reader ->
-            var line: String? = reader.readLine()
-            while (line != null) {
-                output.append(line).append("\n")
-                println("$logPrefix: $line")
-                line = reader.readLine()
-            }
-        }
-        return output.toString()
-    }
-
     fun filterWords(input: String): String {
         val set = input.substringAfter("Rare Words:")
             .trim()

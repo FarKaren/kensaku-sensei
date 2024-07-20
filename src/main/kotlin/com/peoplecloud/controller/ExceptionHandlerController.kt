@@ -3,11 +3,11 @@ package com.peoplecloud.controller
 import com.deepl.api.QuotaExceededException
 import com.deepl.api.TooManyRequestsException
 import com.peoplecloud.dto.exception.ErrorDto
-import com.peoplecloud.exceptions.UnsupportedLanguageException
 import com.peoplecloud.dto.exception.ValidationErrorResponse
 import com.peoplecloud.dto.exception.Violation
 import com.peoplecloud.exceptions.EntityNotFoundException
 import com.peoplecloud.exceptions.UnsupportedFileType
+import com.peoplecloud.exceptions.UnsupportedLanguageException
 import com.peoplecloud.exceptions.YandexDictionaryClientException
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.Logger
@@ -38,9 +38,6 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
         private const val QUOTA_EXCEEDED_EXCEPTION = "QUOTA EXCEEDED EXCEPTION"
         private const val TOO_MANY_REQUEST = "TOO MANY REQUEST"
         private const val ENTITY_NOT_FOUND_EXCEPTION = "ENTITY NOT FOUND EXCEPTION"
-       // private const val dictionaryErrorCods = mapOf(
-
-        //)
     }
 
     @ExceptionHandler(UnsupportedFileType::class)
@@ -101,18 +98,6 @@ class ExceptionHandlerController: ResponseEntityExceptionHandler() {
             )
         )
     }
-
-//    @ExceptionHandler(TimeoutException::class)
-//    @ResponseStatus(value = HttpStatus.REQUEST_TIMEOUT)
-//    fun seleniumTimeoutException(e: TimeoutException): ResponseEntity<ErrorDto> {
-//        log.error(e.message)
-//        return ResponseEntity.ok(
-//            ErrorDto(
-//                errorCode = HttpStatus.REQUEST_TIMEOUT.value(),
-//                errorMessage = "$TIMEOUT_EXCEPTION: ${e.message}"
-//            )
-//        )
-//    }
 
     @ExceptionHandler(QuotaExceededException::class)
     fun deeplQuotaExceededException(e: QuotaExceededException): ResponseEntity<ErrorDto> {

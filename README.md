@@ -8,8 +8,8 @@ mkdir ~/kensakusensei
 
 Пример: home/user/kensakusensei
 
-### Шаг 2: Разархивируйте файл 
-https://github.com/People-Cloud/izumohack2024_textbook_translator/tree/main/backend/environments.tar.gz <br>
+### Шаг 2: Разархивируйте файл
+environments.tar.gz (поставляется отдельно)<br>
 Внутри 4 папки: jar, python, myenv, tesseract.
 
 ### Шаг 3: Добавление приложения
@@ -49,7 +49,7 @@ home
         ├── files
         └── kensaku-sensei (или kensaku-sensei-0.0.1-SNAPSHOT.jar)
 ```
-        
+
 ### Шаг 8: Запуск приложения
 - Если скопировали JAR файл (Шаг 2):
   Откройте консоль в папке home/user/kensakusensei и выполните команду: <br>
@@ -72,7 +72,7 @@ Create a kensakusensei folder in the user's home directory.
 mkdir ~/kensakusensei
 
 ### Step 2: Unzip file
-https://github.com/People-Cloud/izumohack2024_textbook_translator/tree/main/backend/environments.tar.gz  <br>
+environments.tar.gz  <br>
 Inside 4 folders: jar, python, myenv, tesseract.
 
 Example: home/user/kensakusensei
@@ -86,7 +86,7 @@ Add the application to the kensakusensei folder. This can be done in two ways:
 - Clone the project
   Clone the project from the repository:
   git clone https://github.com/People-Cloud/izumohack2024_textbook_translator/tree/main/backend ~/kensakusensei
-  
+
 ### Step 4: Copy the "python" folder
 Copy the python folder to ~/kensakusensei/python
 
@@ -119,7 +119,7 @@ home
 - If you copied the JAR file (Step 2):
   Open a terminal in the home/user/kensakusensei folder and run the command:
   java -jar kensaku-sensei-0.0.1-SNAPSHOT.jar
-  
+
 - If you cloned the project (Step 2):  
   Install an IDE like Intellij IDEA or Eclipse. Open the cloned project in the IDE and run the main method in the TranslateHelperApplication class.
 

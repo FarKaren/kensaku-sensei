@@ -37,7 +37,8 @@ springdoc:
 pictureSearchUrl: "https://duckduckgo.com/?q=$query&kp=-2&iar=images&iax=images&ia=images&p=1"
 
 api-keys:
-  yandexDictionaryApiKey: dict.1.1.20240709T112722Z.0f74a7c05b61085c.2314627141d68c0729c9bb65afc6ca967c34c040
-  unsplashApiKey: yBRSRK9V_6PjaOPSiWZgujpfVV6y82nfltue-EnHsCk
+  yandexDictionaryApiKey: "yandexDictionaryApiKey"
+  unsplashApiKey: "unsplashApiKey"
+  deeplApiKey: "deeplApiKey"
 
 

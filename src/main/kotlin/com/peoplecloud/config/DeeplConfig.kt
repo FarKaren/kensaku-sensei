@@ -5,10 +5,12 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class DeeplConfig {
+class DeeplConfig(
+    private val apiKeysProperty: ApiKeysProperty
+) {
 
     @Bean
     fun translator(): Translator {
-        return Translator("5423e90d-b9a8-4539-8f2f-ad0ba068e79e:fx")
+        return Translator(apiKeysProperty.deeplApiKey)
     }
 }

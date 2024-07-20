@@ -1,6 +1,5 @@
 package com.peoplecloud.client.dictionary
 
-import com.peoplecloud.client.unsplash.UnsplashClientConfig
 import com.peoplecloud.dto.word.YandexResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
